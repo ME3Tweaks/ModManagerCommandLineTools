@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ModManagerCommandLineTools")]
+[assembly: AssemblyTitle("SharedTools")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ModManagerCommandLineTools")]
+[assembly: AssemblyProduct("SharedTools")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("6946db0f-bebd-4380-b8b3-d3a76bfc8de3")]
+[assembly: Guid("19674e94-aef7-4e8f-8e48-ede1a7a35ba0")]
 
 // Version information for an assembly consists of the following four values:
 //
