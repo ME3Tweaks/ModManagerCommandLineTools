@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SFARTools-Extract")]
-[assembly: AssemblyDescription("Extraction tools for Mass Effect 3")]
+[assembly: AssemblyTitle("SFARTools-Inject")]
+[assembly: AssemblyDescription("SFAR Injection and update tools for Mass Effect 3")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ME3Tweaks")]
-[assembly: AssemblyProduct("SFARTools")]
+[assembly: AssemblyProduct("SFARTools-Inject")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("42bec400-6832-437c-9239-7bf78ccefadd")]
+[assembly: Guid("c8f5e4cf-ea60-4982-b428-b3d8f8a12aa7")]
 
 // Version information for an assembly consists of the following four values:
 //
