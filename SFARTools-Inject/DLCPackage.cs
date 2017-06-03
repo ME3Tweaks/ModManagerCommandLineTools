@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using SevenZip;
 
 namespace SFARTools_Inject
 {

@@ -55,7 +55,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\Users\Michael\Downloads\LZMA-compression-master\SevenZip.csproj">
+    <ProjectReference Include="..\SevenZip\SevenZip.csproj">
       <Project>{67a14617-b989-47d1-8a8a-a8aef1b01970}</Project>
       <Name>SevenZip</Name>
     </ProjectReference>

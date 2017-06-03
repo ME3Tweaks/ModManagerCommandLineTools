@@ -8,6 +8,7 @@ namespace PCCTools
 {
     class Program
     {
+        public static string GAMEPATH = "UNDEFINED";
         static void Main(string[] args)
         {
         }
