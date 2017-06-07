@@ -530,9 +530,7 @@ namespace SFARTools_Inject
                     Header.FileCount--;
                 }
                 Files = l;//.ToArray();
-                //DebugOutput.PrintLn("Rebuilding...");
                 ReBuild();
-                //DebugOutput.PrintLn("Done.");
             }
             catch (Exception ex)
             {

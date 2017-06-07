@@ -29,7 +29,6 @@ using System.Security.Cryptography;
 using System.Text;
 using StreamHelpers;
 using System.Threading.Tasks;
-using SharedTools;
 
 namespace SFARTools
 {
@@ -48,6 +47,7 @@ namespace SFARTools
         List<FileEntry> filesList;
         uint maxBlockSize;
         List<ushort> blockSizes;
+        string sfarfilelocation;
 
         public struct FileEntry
         {
@@ -72,6 +72,12 @@ namespace SFARTools
             sfarFile.Close();
             sfarFile.Dispose();
             sfarFile = null;
+        }
+
+        public SFAR(string sfarpath)
+        {
+            sfarfilelocation = sfarpath;
+            loadHeader(sfarpath);
         }
 
         private void loadHeader(string filename)
@@ -219,42 +225,54 @@ namespace SFARTools
             }
         }
 
+
         /// <summary>
-        /// Extracts a list of files from the specified SFAR to the specified directory, keeping the same folder structure as the searchname.
+        /// Extracts a list of files from the SFAR to the specified directory, keeping the same folder structure as the searchname.
         /// This method does not modify the original SFAR.
         /// </summary>
-        /// <param name="SFARfilename">Filepath to SFAR to extract from</param>
         /// <param name="outPath">Directory to extract files to</param>
         /// <param name="searchnames">List of files starting with /BIOGame/DLC/...</param>
-        public void extractfiles(string SFARfilename, string outPath, string[] searchnames)
+        /// <param name="flatFolderExtraction">Indicates that files should be dumped directly to the output folder without the original archive filepath</param>
+        public void extractfiles(string outPath, string[] searchnames, bool flatFolderExtraction, bool ignoreMissingFiles = false)
         {
-            loadHeader(SFARfilename);
 
-            //Directory.CreateDirectory(Path.Combine(outPath, "CookedPCConsole"));
-            //using (FileStream outputFile = new FileStream(Path.Combine(outPath, "CookedPCConsole", "Default.sfar"), FileMode.Create, FileAccess.Write))
-            //{
-            //    outputFile.WriteUInt32(SfarTag);
-            //    outputFile.WriteUInt32(SfarVersion);
-            //    outputFile.WriteUInt32(HeaderSize);
-            //    outputFile.WriteUInt32(HeaderSize);
-            //    outputFile.WriteUInt32((uint)filesList.Count);
-            //    outputFile.WriteUInt32(HeaderSize);
-            //    outputFile.WriteUInt32((uint)MaxBlockSize);
-            //    outputFile.WriteUInt32(LZMATag);
-            //}
-
+            if (outPath == null)
+            {
+                //do same folder
+                outPath = Directory.GetParent(sfarfilelocation).FullName + "\\";
+            }
+            else
+            {
+                outPath = outPath.Replace('/', '\\');
+                if (!outPath.EndsWith("\\"))
+                {
+                    outPath += "\\";
+                }
+            }
+            List<string> itemstoextract = searchnames.ToList<string>();
             for (int i = 0; i < filesCount; i++)
             {
                 if (filenamesIndex == i)
                     continue;
                 if (filesList[i].filenamePath == null)
                     throw new Exception("filename missing");
+                if (itemstoextract.FindIndex(x => x.Equals(filesList[i].filenamePath, StringComparison.OrdinalIgnoreCase)) == -1)
+                    continue; //skip
+
+                Console.WriteLine("Extracting: " + filesList[i].filenamePath);
 
 
                 int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
                 string filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
-                string dir = Path.GetDirectoryName(outPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
+                string dir = Path.GetDirectoryName(outPath)+"\\";
+                if (!flatFolderExtraction)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
+                }
+                else
+                {
+                    filename = Path.GetFileName(filesList[i].filenamePath);
+                }
                 using (FileStream outputFile = new FileStream(dir + filename, FileMode.Create, FileAccess.Write))
                 {
                     sfarFile.JumpTo(filesList[i].dataOffset);
@@ -305,26 +323,29 @@ namespace SFARTools
                     }
                 }
             }
-            sfarFile.Close();
-            sfarFile.Dispose();
-            sfarFile = null;
         }
 
-        public void extract(string SFARfilename, string outPath)
+        /// <summary>
+        /// Extracts the entire archive
+        /// </summary>
+        /// <param name="outPath">Directory to output files to. If null, it will place them in the same DLC folder structure as in the archive.</param>
+        /// <param name="readOnly">Indicates that the original SFAR should not be modified.</param>
+        public void extract(string outPath = null, bool readOnly = false)
         {
-            loadHeader(SFARfilename);
-
-            Directory.CreateDirectory(Path.Combine(outPath, "CookedPCConsole"));
-            using (FileStream outputFile = new FileStream(Path.Combine(outPath, "CookedPCConsole", "Default.sfar"), FileMode.Create, FileAccess.Write))
+            if (!readOnly)
             {
-                outputFile.WriteUInt32(SfarTag);
-                outputFile.WriteUInt32(SfarVersion);
-                outputFile.WriteUInt32(HeaderSize);
-                outputFile.WriteUInt32(HeaderSize);
-                outputFile.WriteUInt32((uint)filesList.Count);
-                outputFile.WriteUInt32(HeaderSize);
-                outputFile.WriteUInt32((uint)MaxBlockSize);
-                outputFile.WriteUInt32(LZMATag);
+                Directory.CreateDirectory(Path.Combine(outPath, "CookedPCConsole"));
+                using (FileStream outputFile = new FileStream(Path.Combine(outPath, "CookedPCConsole", "Default.sfar.STAGED"), FileMode.Create, FileAccess.Write))
+                {
+                    outputFile.WriteUInt32(SfarTag);
+                    outputFile.WriteUInt32(SfarVersion);
+                    outputFile.WriteUInt32(HeaderSize);
+                    outputFile.WriteUInt32(HeaderSize);
+                    outputFile.WriteUInt32((uint)filesList.Count);
+                    outputFile.WriteUInt32(HeaderSize);
+                    outputFile.WriteUInt32((uint)MaxBlockSize);
+                    outputFile.WriteUInt32(LZMATag);
+                }
             }
 
             for (int i = 0; i < filesCount; i++)
@@ -334,7 +355,7 @@ namespace SFARTools
                 if (filesList[i].filenamePath == null)
                     throw new Exception("filename missing");
 
-                
+
                 int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
                 string filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
                 string dir = Path.GetDirectoryName(outPath);
@@ -389,9 +410,6 @@ namespace SFARTools
                     }
                 }
             }
-            sfarFile.Close();
-            sfarFile.Dispose();
-            sfarFile = null;
         }
 
         public void fullRePack(string inPath, string outPath, string DLCName)
@@ -559,7 +577,7 @@ namespace SFARTools
                 return;
             }
 
-            long diskFreeSpace = Misc.getDiskFreeSpace(DLCPath);
+            long diskFreeSpace = SharedTools.Misc.getDiskFreeSpace(DLCPath);
             long diskUsage = 0;
             for (int i = 0; i < sfarFiles.Count; i++)
             {
@@ -585,7 +603,7 @@ namespace SFARTools
                 string DLCname = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(sfarFiles[i])));
                 string outPath = Path.Combine(tmpDlcDir, DLCname);
                 Directory.CreateDirectory(outPath);
-                SFAR dlc = new SFAR();
+                SFAR dlc = new SFAR(sfarFiles[i]);
                 //if (mainWindow != null)
                 //{
                 //    mainWindow.updateStatusLabel("SFAR extracting - DLC " + (i + 1) + " of " + sfarFiles.Count);
@@ -594,7 +612,7 @@ namespace SFARTools
                 //{
                 //    installer.updateStatusPrepare("Extracting DLC ... " + (i + 1) + " of " + sfarFiles.Count);
                 //}
-                dlc.extract(sfarFiles[i], outPath);
+                dlc.extract(outPath);
             }
 
             sfarFiles = Directory.GetFiles(DLCPath, "Default.sfar", SearchOption.AllDirectories).ToList();
@@ -619,8 +637,8 @@ namespace SFARTools
                 {
                     //if (mainWindow != null)
                     //{
-                      //  MessageBox.Show("Unable old DLC directory: " + GameData.DLCData + " !");
-                        success = false;
+                    //  MessageBox.Show("Unable old DLC directory: " + GameData.DLCData + " !");
+                    success = false;
                     //}
                 }
             }
@@ -638,9 +656,9 @@ namespace SFARTools
                 {
                     //if (mainWindow != null)
                     //{
-                        //MessageBox.Show("Unable move temporary DLC directory: " + tmpDlcDir + " !");
-                        success = false;
-                   // }
+                    //MessageBox.Show("Unable move temporary DLC directory: " + tmpDlcDir + " !");
+                    success = false;
+                    // }
                 }
             }
             while (success == false);

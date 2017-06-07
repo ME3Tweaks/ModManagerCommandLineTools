@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CommandLine;
+using CommandLine.Text;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,8 +9,28 @@ using System.Threading.Tasks;
 namespace FullAutoTOC
 
 {
+
+    class Options
+    {
+        [Option('t', "tocfile", HelpText = "PCConsoleTOC.bin file to operate on. Using this command will run the program in Local AutoTOC mode. Requires --tocupdates.")]
+        public string TOCFile { get; set; }
+
+        [Option('g', "gamepath", HelpText = "Path to the main Mass Effect 3 game directory. All TOC-able item's will be updated - Basegame, SFARs, Custom DLC, and TESTPATCH (Patch_001.sfar).")]
+        public string GamePath { get; set; }
+
+        [OptionList('u', "tocupdates", HelpText = "List of files (as listed in the TOC entries) and filesizes to update in the file listed in --tocfile. Items must alternate, starting with path and then the size.")]
+        public List<string> TOCUpdates { get; set; }
+
+        [HelpOption]
+        public string GetUsage()
+        {
+            return HelpText.AutoBuild(this,
+              (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
+        }
+    }
+
     /// <summary>
-    /// This program runs AutoTOC on the ME3 game directory.
+    /// This program runs AutoTOC on the ME3 game directory. It can also run in local mode which will update a specified TOC bin file with a matching list of filenames followed by sizes (Used by Mod Manager Run AutoTOC on mod - useful for distributing DLC mods)
     /// It is different because it also works on modified SFARs - based on the size, as its nearly
     /// impossible to make SFARs that are the exact right size as the originals.
     /// </summary>
@@ -19,107 +41,144 @@ namespace FullAutoTOC
         private static Dictionary<string, long> sfarsizemap;
         static void Main(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length == 1)
             {
-                Console.WriteLine("FullAutoTOC by FemShep (based on AutoTOC.exe & ME3Explorer code)");
-                Console.WriteLine("Usage: FullAutoTOC.exe <ME3 Directory>");
+                //Console.WriteLine("FullAutoTOC by FemShep (based on AutoTOC.exe & ME3Explorer code)");
+                //Console.WriteLine("Usage: FullAutoTOC.exe <ME3 Directory>");
+                RunFullGameTOC(args[0]);
+                EndProgram(0);
             }
-            else
+            Options options = new Options();
+            if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
-                GetSFARSizeMap();
-
-                Console.WriteLine("Updating Unpacked and SFAR TOCs");
-                string gameDir = args[0];
-                if (gameDir.EndsWith("\""))
+                if (options.GamePath != null)
                 {
-                    gameDir = gameDir.Remove(gameDir.Length - 1);
+                    RunFullGameTOC(args[0]);
+                    EndProgram(0);
                 }
-                if (!Directory.Exists(gameDir))
+
+                if (options.TOCFile != null)
                 {
-                    Console.WriteLine("ERROR: Input game directory does not exist.");
-                    Environment.Exit(1);
-                }
-                string baseDir = Path.Combine(gameDir, @"BIOGame\");
-                string dlcDir = Path.Combine(baseDir, @"DLC\");
-                if (!Directory.Exists(dlcDir))
-                {
-                    Console.WriteLine("ERROR: Input directory does not appear to be a Mass Effect 3 root game directory (DLC folder missing).");
-                    Environment.Exit(1);
-                }
-                string testpatchpath = Path.Combine(gameDir, @"BIOGame\Patches\PCConsole\Patch_001.sfar");
-                List<string> folders = (new DirectoryInfo(dlcDir)).GetDirectories().Select(d => d.FullName + "\\").Where(x => x.StartsWith(dlcDir + "DLC_", StringComparison.OrdinalIgnoreCase)).ToList();
-                folders.Add(baseDir);
-                Console.WriteLine("Files:");
-                folders.ForEach(x => Console.WriteLine(x));
-
-                Parallel.ForEach(folders, (currentfolder) =>
-                {
-                    // The more computational work you do here, the greater 
-                    // the speedup compared to a sequential foreach loop.
-                    string foldername = Path.GetFileName(Path.GetDirectoryName(currentfolder));
-                    string sfar = currentfolder + SFAR_SUBPATH;
-                    long size = 0;
-                    sfarsizemap.TryGetValue(foldername, out size);
-
-                    if (size > 0)
-                    {
-                        //Official DLC
-                        if (File.Exists(sfar))
-                        {
-                            long installedsize = new FileInfo(sfar).Length;
-                            if (installedsize != size)
-                            {
-                                //AutoTOC it
-                                DLCPackage dlc = new DLCPackage(sfar);
-                                dlc.UpdateTOCbin();
-                                Console.WriteLine(foldername + " - Ran SFAR TOC");
-
-                            }
-                            else
-                            {
-                                //We're good
-                                //Console.WriteLine(foldername + ", - SFAR TOC - Unmodified");
-
-                            }
-
-                        }
-
-                    }
-                    else
-                    {
-                        //TOC it unpacked style
-                        // Console.WriteLine(foldername + ", - UNPACKED TOC");
-                        prepareToCreateTOC(currentfolder);
-                        Console.WriteLine(foldername + " - Ran Unpacked TOC");
-                    }
-                });
-                //TOC TestPatch
-
-                if (File.Exists(testpatchpath))
-                {
-                    long installedsize = new FileInfo(testpatchpath).Length;
-                    if (installedsize != sfarsizemap["DLC_TestPatch"] && installedsize != TESTPATCH_16_SIZE)
-                    {
-                        {
-                            //AutoTOC it
-                            DLCPackage dlc = new DLCPackage(testpatchpath);
-                            dlc.UpdateTOCbin();
-                            Console.WriteLine("TESTPATCH - Ran SFAR TOC");
-                        }
+                    if (!File.Exists(options.TOCFile)) {
+                        Console.WriteLine("TOC file to update doesn't exist: " + options.TOCFile);
+                        EndProgram(1);
                     }
 
-#if DEBUG
-                    Console.WriteLine("Any key to continue");
-                    Console.ReadKey();
-#endif
-                    //Task.WhenAll(folders.Select(loc => TOCAsync(loc))).Wait();
+                    if (options.TOCUpdates == null || options.TOCUpdates.Count == 0)
+                    {
+                        Console.WriteLine("--tocfile requires --tocupdates followed by an even number of arguments repeating in a <filepath, filesize> pattern.");
+                        EndProgram(1);
+                    }
 
-                    //Console.WriteLine("Done!");
+                    Dictionary<string, long> updates = new Dictionary<string,long>();
+
+                    int getindex = 0;
+                    for (int i = 0; i < options.TOCUpdates.Count; i++, getindex++)
+                    {
+                        string path = options.TOCUpdates[i];
+                        i++;
+                        long size = Convert.ToInt64(options.TOCUpdates[i]);
+                        updates.Add(path, size);
+                    }
+
+                    TOCBinFile tbf = new TOCBinFile(options.TOCFile);
+                    
+                    //ITERATE OVER EACH ENTRY, USE LINQ TO FIND INDEX, UPDATE ENTRY.
+
+                    RunFullGameTOC(args[0]);
+                    EndProgram(0);
                 }
             }
         }
 
+        private static void RunFullGameTOC(string gameDir)
+        {
+            GetSFARSizeMap();
+            Console.WriteLine("FULL AUTOTOC MODE - Updating Unpacked and SFAR TOCs");
+            if (gameDir.EndsWith("\""))
+            {
+                gameDir = gameDir.Remove(gameDir.Length - 1);
+            }
+            if (!Directory.Exists(gameDir))
+            {
+                Console.WriteLine("ERROR: Specified game directory does not exist.");
+                EndProgram(1);
+            }
+            string baseDir = Path.Combine(gameDir, @"BIOGame\");
+            string dlcDir = Path.Combine(baseDir, @"DLC\");
+            if (!Directory.Exists(dlcDir))
+            {
+                Console.WriteLine("ERROR: Specified game directory does not appear to be a Mass Effect 3 root game directory (DLC folder missing).");
+                EndProgram(1);
+            }
+            string testpatchpath = Path.Combine(gameDir, @"BIOGame\Patches\PCConsole\Patch_001.sfar");
+            List<string> folders = (new DirectoryInfo(dlcDir)).GetDirectories().Select(d => d.FullName + "\\").Where(x => x.StartsWith(dlcDir + "DLC_", StringComparison.OrdinalIgnoreCase)).ToList();
+            folders.Add(baseDir);
+            Console.WriteLine("Files:");
+            folders.ForEach(x => Console.WriteLine(x));
 
+            Parallel.ForEach(folders, (currentfolder) =>
+            {
+                // The more computational work you do here, the greater 
+                // the speedup compared to a sequential foreach loop.
+                string foldername = Path.GetFileName(Path.GetDirectoryName(currentfolder));
+                string sfar = currentfolder + SFAR_SUBPATH;
+                long size = 0;
+                sfarsizemap.TryGetValue(foldername, out size);
+
+                if (size > 0)
+                {
+                    //Official DLC
+                    if (File.Exists(sfar))
+                    {
+                        long installedsize = new FileInfo(sfar).Length;
+                        if (installedsize != size)
+                        {
+                            //AutoTOC it
+                            DLCPackage dlc = new DLCPackage(sfar);
+                            dlc.UpdateTOCbin();
+                            Console.WriteLine(foldername + " - Ran SFAR TOC");
+
+                        }
+                        else
+                        {
+                            //We're good
+                            //Console.WriteLine(foldername + ", - SFAR TOC - Unmodified");
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    //TOC it unpacked style
+                    // Console.WriteLine(foldername + ", - UNPACKED TOC");
+                    prepareToCreateTOC(currentfolder);
+                    Console.WriteLine(foldername + " - Ran Unpacked TOC");
+                }
+            });
+            //TOC TestPatch
+
+            if (File.Exists(testpatchpath))
+            {
+                long installedsize = new FileInfo(testpatchpath).Length;
+                if (installedsize != sfarsizemap["DLC_TestPatch"] && installedsize != TESTPATCH_16_SIZE)
+                {
+                    {
+                        //AutoTOC it
+                        DLCPackage dlc = new DLCPackage(testpatchpath);
+                        dlc.UpdateTOCbin();
+                        Console.WriteLine("TESTPATCH - Ran SFAR TOC");
+                    }
+                }
+
+                EndProgram(0);
+                //Task.WhenAll(folders.Select(loc => TOCAsync(loc))).Wait();
+
+                //Console.WriteLine("Done!");
+            }
+        }
 
         static void prepareToCreateTOC(string consoletocFile)
         {
@@ -267,5 +326,21 @@ namespace FullAutoTOC
             }
             return sfarsizemap;
         }
+
+        /// <summary>
+        /// Ends the program with the specified code. If running in debug mode, the program will wait for user input.
+        /// </summary>
+        /// <param name="code">Exit code</param>
+        static void EndProgram(int code)
+        {
+
+#if DEBUG
+            Console.WriteLine("Press any key to continue");
+            Console.ReadKey();
+#endif
+
+            Environment.Exit(code);
+        }
     }
+
 }

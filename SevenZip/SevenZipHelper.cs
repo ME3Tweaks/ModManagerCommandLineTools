@@ -53,11 +53,12 @@ namespace SevenZip
 
         #endregion
 
-        public static byte[] Compress(byte[] inputBytes)
+        public static byte[] Compress(byte[] inputBytes, int compressionlevel = 9)
         {
             MemoryStream inStream = new MemoryStream(inputBytes);
             MemoryStream outStream = new MemoryStream();
             SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
+            dictionary = 1 << compressionlevel;
             encoder.SetCoderProperties(propIDs, properties);
             encoder.WriteCoderProperties(outStream);
             /*long fileSize = inStream.Length;
