@@ -85,7 +85,8 @@ namespace PCCDecompress
             if ((packageFlags & 0x02000000u) == 0)
             {
                 Console.WriteLine("This PCC file is already decompressed.");
-                return null;
+                input.Seek(0, SeekOrigin.Begin);
+                return input.ReadBytes((int)input.Length);
             }
 
             if ((packageFlags & 8) != 0)

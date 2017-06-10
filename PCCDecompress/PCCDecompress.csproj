@@ -84,7 +84,8 @@
   <Import Project="..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets" Condition="Exists('..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets')" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(TargetFileName)"
-del /Q "$(SolutionDir)Testing\Decompress\*.pcc"</PostBuildEvent>
+del /Q "$(SolutionDir)Testing\Decompress\*.pcc"
+copy /y "$(TargetPath)" "C:\Users\Michael\workspace\modmanager3\data\tools\ModManagerCommandLine\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>

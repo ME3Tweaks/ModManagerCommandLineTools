@@ -59,7 +59,7 @@ namespace FullAutoTOC
             {
                 if (options.GamePath != null)
                 {
-                    RunFullGameTOC(args[0]);
+                    RunFullGameTOC(options.GamePath);
                     EndProgram(0);
                 }
 
@@ -181,7 +181,7 @@ namespace FullAutoTOC
             }
             if (!Directory.Exists(gameDir))
             {
-                Console.WriteLine("ERROR: Specified game directory does not exist.");
+                Console.WriteLine("ERROR: Specified game directory does not exist: "+gameDir);
                 EndProgram(1);
             }
             string baseDir = Path.Combine(gameDir, @"BIOGame\");
@@ -194,9 +194,9 @@ namespace FullAutoTOC
             string testpatchpath = Path.Combine(gameDir, @"BIOGame\Patches\PCConsole\Patch_001.sfar");
             List<string> folders = (new DirectoryInfo(dlcDir)).GetDirectories().Select(d => d.FullName + "\\").Where(x => x.StartsWith(dlcDir + "DLC_", StringComparison.OrdinalIgnoreCase)).ToList();
             folders.Add(baseDir);
-            Console.WriteLine("Files:");
+            Console.WriteLine("Found TOC Targets:");
             folders.ForEach(x => Console.WriteLine(x));
-
+            Console.WriteLine("=====Generating TOC Files=====");
             Parallel.ForEach(folders, (currentfolder) =>
             {
                 // The more computational work you do here, the greater 
@@ -242,6 +242,8 @@ namespace FullAutoTOC
 
             if (File.Exists(testpatchpath))
             {
+                Console.WriteLine("TESTPATCH - Found TESTPATCH at "+testpatchpath);
+
                 long installedsize = new FileInfo(testpatchpath).Length;
                 if (installedsize != sfarsizemap["DLC_TestPatch"] && installedsize != TESTPATCH_16_SIZE)
                 {
@@ -251,6 +253,10 @@ namespace FullAutoTOC
                         dlc.UpdateTOCbin();
                         Console.WriteLine("TESTPATCH - Ran SFAR TOC");
                     }
+                } else
+                {
+                    Console.WriteLine("TESTPATCH does not need TOC'd.");
+
                 }
 
                 EndProgram(0);

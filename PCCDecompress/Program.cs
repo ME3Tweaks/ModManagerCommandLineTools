@@ -105,10 +105,7 @@ namespace PCCDecompress
                 if (options.InputFile != null)
                 {
                     pccFiles.Add(options.InputFile);
-                    if (options.OutputFile == null)
-                    {
-                        baseoutputpath = Directory.GetParent(options.InputFile) + "\\";
-                    }
+                    baseoutputpath = Directory.GetParent(options.OutputFile ?? options.InputFile) + "\\";
                 }
                 else
                 {

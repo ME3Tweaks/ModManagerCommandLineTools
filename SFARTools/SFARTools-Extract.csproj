@@ -93,7 +93,8 @@
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(TargetFileName)" /y
 copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
-copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(SolutionDir)Output\sevenzipwrapper.dll" /y</PostBuildEvent>
+copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(SolutionDir)Output\sevenzipwrapper.dll" /y
+copy /y "$(TargetPath)" "C:\Users\Michael\workspace\modmanager3\data\tools\ModManagerCommandLine\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

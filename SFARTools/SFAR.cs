@@ -259,22 +259,19 @@ namespace SFARTools
                 if (itemstoextract.FindIndex(x => x.Equals(filesList[i].filenamePath, StringComparison.OrdinalIgnoreCase)) == -1)
                     continue; //skip
 
-                Console.WriteLine("Extracting: " + filesList[i].filenamePath);
-
-
                 int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
                 string filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
-                string dir = Path.GetDirectoryName(outPath)+"\\";
-                if (!flatFolderExtraction)
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
-                }
-                else
+                string dir = Path.GetDirectoryName(outPath) + "\\";
+                if (flatFolderExtraction)
                 {
                     filename = Path.GetFileName(filesList[i].filenamePath);
                 }
+                Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
+
                 using (FileStream outputFile = new FileStream(dir + filename, FileMode.Create, FileAccess.Write))
                 {
+                    Console.WriteLine("Extracting: " + filesList[i].filenamePath + " to "+outputFile.Name);
+
                     sfarFile.JumpTo(filesList[i].dataOffset);
                     if (filesList[i].compressedBlockSizesIndex == -1)
                     {

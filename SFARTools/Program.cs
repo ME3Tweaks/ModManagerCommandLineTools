@@ -20,7 +20,7 @@ namespace SFARTools
         [Option('d', "OutputPath", HelpText = "Directory to extract files to. Will extract to the same filename path unless the --FlatFolderExtraction parameter is specified.")]
         public string OutputPath { get; set; }
 
-        [Option('f', "FlatFolderExtraction", DefaultValue = false, HelpText = "Specifies that files being extracted will be placed all into the --outputpath folder directly, rather than with the original SFAR file path.")]
+        [Option('f', "FlatFolderExtraction", DefaultValue = false, HelpText = "Specifies that files being extracted will be placed all into the --OutputPath folder directly, rather than with the original SFAR file path.")]
         public bool FlatFolder { get; set; }
 
         [Option('a', "ExtractEntireArchive", DefaultValue = false, HelpText = "Extracts the entire spcified archive (--sfarpath).")]
@@ -84,7 +84,7 @@ namespace SFARTools
                     if (options.ExtractList.Length > 0)
                     {
                         //Extract a list of files
-                        sfar.extractfiles(null, options.ExtractList, true);
+                        sfar.extractfiles(options.OutputPath, options.ExtractList, true);
                         sfar.Dispose();
 
                     }

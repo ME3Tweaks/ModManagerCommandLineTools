@@ -154,14 +154,7 @@ namespace SFARTools_Inject
                     }
                     EndProgram(0);
                 }
-
-
-
-
-
             }
-
-
         }
         /// <summary>
         /// Ends the program with the specified code. If running in debug mode, the program will wait for user input.
