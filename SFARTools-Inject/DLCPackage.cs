@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using SevenZip;
+using SharedTools;
 
 namespace SFARTools_Inject
 {
@@ -255,7 +255,7 @@ namespace SFARTools_Inject
                         fs.Read(inputBlock, 0, (int)compressedBlockSize);
                         uint actualUncompressedBlockSize = uncompressedBlockSize;
                         uint actualCompressedBlockSize = compressedBlockSize;
-                        outputBlock = SevenZip.Helper.Decompress(inputBlock, (int)actualUncompressedBlockSize);
+                        outputBlock = SevenZipHelper.LZMA.Decompress(inputBlock, actualUncompressedBlockSize);
                         if (outputBlock.Length != actualUncompressedBlockSize)
                             throw new Exception("Decompression Error");
                         result.Write(outputBlock, 0, (int)actualUncompressedBlockSize);
@@ -580,7 +580,7 @@ namespace SFARTools_Inject
                         uint actualUncompressedBlockSize = uncompressedBlockSize;
                         uint actualCompressedBlockSize = compressedBlockSize;
 
-                        outputBlock = SevenZip.Helper.Decompress(inputBlock, (int)actualUncompressedBlockSize);
+                        outputBlock = SevenZipHelper.LZMA.Decompress(inputBlock, actualUncompressedBlockSize);
                         if (outputBlock.Length != actualUncompressedBlockSize)
                             throw new Exception("Decompression Error");
                         result.Write(outputBlock, 0, (int)actualUncompressedBlockSize);

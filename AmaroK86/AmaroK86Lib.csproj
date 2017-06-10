@@ -64,9 +64,9 @@
       <Project>{681db2ce-e3eb-4110-ac50-f53eaca66e99}</Project>
       <Name>Gibbed.MassEffect3.FileFormats</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SevenZip\SevenZip.csproj">
-      <Project>{67a14617-b989-47d1-8a8a-a8aef1b01970}</Project>
-      <Name>SevenZip</Name>
+    <ProjectReference Include="..\SharedTools\SharedTools.csproj">
+      <Project>{19674e94-aef7-4e8f-8e48-ede1a7a35ba0}</Project>
+      <Name>SharedTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\SharpDevelop\ICSharpCode.SharpZLib.csproj">
       <Project>{0e7413ff-eb9e-4714-acf2-be3a6a7b2ffd}</Project>

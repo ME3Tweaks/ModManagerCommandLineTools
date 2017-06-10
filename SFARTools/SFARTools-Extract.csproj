@@ -81,10 +81,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SevenZip\SevenZip.csproj">
-      <Project>{67a14617-b989-47d1-8a8a-a8aef1b01970}</Project>
-      <Name>SevenZip</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SharedTools\SharedTools.csproj">
       <Project>{19674e94-aef7-4e8f-8e48-ede1a7a35ba0}</Project>
       <Name>SharedTools</Name>

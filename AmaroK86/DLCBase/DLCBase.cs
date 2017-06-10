@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Gibbed.IO;
 using Gibbed.MassEffect3.FileFormats;
 using Gibbed.MassEffect3.FileFormats.SFXArchive;
-
+using SevenZipHelper;
 #if (WITH_GUI)
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -292,7 +292,7 @@ namespace AmaroK86.MassEffect3
                                 throw new InvalidOperationException();
                             }*/
 
-                            outputBlock = SevenZip.Helper.Decompress(inputBlock, (int)actualUncompressedBlockSize);
+                            outputBlock = SevenZipHelper.LZMA.Decompress(inputBlock, actualUncompressedBlockSize);
                             if (outputBlock.Length != actualUncompressedBlockSize)
                                 throw new NotImplementedException();
 
@@ -678,7 +678,7 @@ namespace AmaroK86.MassEffect3
                 inputBlock = new byte[actualUncompressedBlockSize];
                 inStream.Read(inputBlock, 0, (int)actualUncompressedBlockSize);
 
-                outputBlock = SevenZip.Helper.Compress(inputBlock);
+                outputBlock = SevenZipHelper.LZMA.Compress(inputBlock);
                 actualCompressedBlockSize = (uint)outputBlock.Length;
 
 #if (WITH_GUI)
@@ -941,7 +941,7 @@ namespace AmaroK86.MassEffect3
                         localblockcount = blockCounter++;
                     }
 
-                    outputBlock = SevenZip.Helper.Compress(inputBlock);
+                    outputBlock = SevenZipHelper.LZMA.Compress(inputBlock);
                     actualCompressedBlockSize = (uint)outputBlock.Length;
 
                     uint maxCompressedBlockSize = actualCompressedBlockSize;
@@ -1124,7 +1124,7 @@ namespace AmaroK86.MassEffect3
                                 throw new InvalidOperationException();
                             }*/
 
-                            outputBlock = SevenZip.Helper.Decompress(inputBlock, (int)actualUncompressedBlockSize);
+                            outputBlock = SevenZipHelper.LZMA.Decompress(inputBlock, actualUncompressedBlockSize);
                             if (outputBlock.Length != actualUncompressedBlockSize)
                                 throw new NotImplementedException();
 

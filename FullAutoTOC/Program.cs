@@ -18,8 +18,14 @@ namespace FullAutoTOC
         [Option('g', "gamepath", HelpText = "Path to the main Mass Effect 3 game directory. All TOC-able item's will be updated - Basegame, SFARs, Custom DLC, and TESTPATCH (Patch_001.sfar).")]
         public string GamePath { get; set; }
 
-        [OptionList('u', "tocupdates", HelpText = "List of files (as listed in the TOC entries) and filesizes to update in the file listed in --tocfile. Items must alternate, starting with path and then the size.")]
-        public List<string> TOCUpdates { get; set; }
+        [Option('d', "dumptoc", HelpText = "Prints all entries in the specified --tocfile.")]
+        public bool DumpTOC { get; set; }
+
+        [OptionArray('f', "tocfolders", HelpText = "Creates a PCConsoleTOC.bin file at the root of the specified folders, for that folder.")]
+        public string[] TOCFolders { get; set; }
+
+        [OptionArray('u', "tocupdates", HelpText = "List of files (as listed in the TOC entries) and filesizes to update in the file listed in --tocfile. Items must alternate, starting with path and then the size.")]
+        public string[] TOCUpdates { get; set; }
 
         [HelpOption]
         public string GetUsage()
@@ -57,35 +63,109 @@ namespace FullAutoTOC
                     EndProgram(0);
                 }
 
+                if (options.TOCFolders != null && options.TOCFolders.Length > 0)
+                {
+                    //precheck
+                    foreach (string folder in options.TOCFolders)
+                    {
+                        if (!Directory.Exists(folder))
+                        {
+                            Console.WriteLine("One of the specified folders to make a TOC for does not exist: " +folder);
+                            EndProgram(1);
+                        }
+                    }
+
+                    Parallel.ForEach(options.TOCFolders, folder =>
+                    {
+                        CreateUnpackedTOC(folder);
+                    });
+                EndProgram(0);
+                }
+
                 if (options.TOCFile != null)
                 {
-                    if (!File.Exists(options.TOCFile)) {
-                        Console.WriteLine("TOC file to update doesn't exist: " + options.TOCFile);
-                        EndProgram(1);
-                    }
-
-                    if (options.TOCUpdates == null || options.TOCUpdates.Count == 0)
+                    if (!File.Exists(options.TOCFile))
                     {
-                        Console.WriteLine("--tocfile requires --tocupdates followed by an even number of arguments repeating in a <filepath, filesize> pattern.");
+                        Console.WriteLine("TOC file to operate on doesn't exist: " + options.TOCFile);
+                        EndProgram(1);
+                    }
+                    TOCBinFile tbf = new TOCBinFile(options.TOCFile);
+                    if (options.DumpTOC)
+                    {
+                        int index = 0;
+                        Console.WriteLine("Index\tOffset\tFilesize\tFilename");
+
+                        foreach (TOCBinFile.Entry e in tbf.Entries)
+                        {
+                            Console.WriteLine(index+"\t0x"+e.offset.ToString("X6") + "\t" + e.size + "\t" + e.name);
+                            index++;
+                        }
+                        EndProgram(0);
+                    }
+
+                    if (options.TOCUpdates == null || options.TOCUpdates.Length == 0 || options.TOCUpdates.Length % 2 != 0)
+                    {
+                        Console.WriteLine("--tocfile without --dumptoc requires --tocupdates followed by an even number of arguments repeating in a <filepath filesize> pattern.");
                         EndProgram(1);
                     }
 
-                    Dictionary<string, long> updates = new Dictionary<string,long>();
+                    Dictionary<string, int> updates = new Dictionary<string, int>();
 
                     int getindex = 0;
-                    for (int i = 0; i < options.TOCUpdates.Count; i++, getindex++)
+                    for (int i = 0; i < options.TOCUpdates.Length; i++, getindex++)
                     {
                         string path = options.TOCUpdates[i];
                         i++;
-                        long size = Convert.ToInt64(options.TOCUpdates[i]);
-                        updates.Add(path, size);
+                        try
+                        {
+                            int size = Convert.ToInt32(options.TOCUpdates[i]);
+                            updates.Add(path, size);
+                        } catch (FormatException e)
+                        {
+                            Console.WriteLine("ERROR READING ARGUMENT (" + options.TOCUpdates[i] + ") - cannot parse integer for size update.");
+                            EndProgram(1);
+                        }
                     }
 
-                    TOCBinFile tbf = new TOCBinFile(options.TOCFile);
                     
-                    //ITERATE OVER EACH ENTRY, USE LINQ TO FIND INDEX, UPDATE ENTRY.
 
-                    RunFullGameTOC(args[0]);
+                    //ITERATE OVER EACH ENTRY, USE LINQ TO FIND INDEX, UPDATE ENTRY.
+                    bool needssaving = false;
+                    foreach (KeyValuePair<string, int> update in updates)
+                    {
+                        bool found = false;
+                        for (int i = 0; i < tbf.Entries.Count; i++)
+                        {
+                            TOCBinFile.Entry entry = tbf.Entries[i];
+                            if (entry.name.Contains(update.Key))
+                            {
+                                {
+                                    found = true;
+                                    if (entry.size != update.Value || true)
+                                    {
+                                        Console.WriteLine("Updating entry " + update.Key);
+                                        tbf.UpdateEntry(i, update.Value);
+                                        //tbf.UpdateEntry(i, 5000);
+                                        //Console.WriteLine("Readback: " + tbf.Entries[i].size);
+                                        needssaving = true;
+                                    }
+                                    break;
+                                }
+                            }
+                            
+                        }
+                        if (!found)
+                        {
+                            Console.WriteLine("The entry " + update.Key + " was not found in this TOC file.");
+                            EndProgram(1);
+                        }
+                    }
+                    if (needssaving)
+                    {
+                        File.WriteAllBytes(options.TOCFile,tbf.Save().ToArray());
+                    }
+
+                    //RunFullGameTOC(args[0]);
                     EndProgram(0);
                 }
             }
@@ -154,7 +234,7 @@ namespace FullAutoTOC
                 {
                     //TOC it unpacked style
                     // Console.WriteLine(foldername + ", - UNPACKED TOC");
-                    prepareToCreateTOC(currentfolder);
+                    CreateUnpackedTOC(currentfolder);
                     Console.WriteLine(foldername + " - Ran Unpacked TOC");
                 }
             });
@@ -180,13 +260,17 @@ namespace FullAutoTOC
             }
         }
 
-        static void prepareToCreateTOC(string consoletocFile)
+        /// <summary>
+        /// Creates a PCConsoleTOC.bin file for the specified folder.
+        /// </summary>
+        /// <param name="folderToTOC">Directory to create TOC for. A PCConsoleTOC.bin file is placed at the root of this folder.</param>
+        static void CreateUnpackedTOC(string folderToTOC)
         {
-            if (!consoletocFile.EndsWith("\\"))
+            if (!folderToTOC.EndsWith("\\"))
             {
-                consoletocFile = consoletocFile + "\\";
+                folderToTOC = folderToTOC + "\\";
             }
-            List<string> files = GetFiles(consoletocFile);
+            List<string> files = GetFiles(folderToTOC);
             if (files.Count != 0)
             {
                 string t = files[0];
@@ -214,13 +298,13 @@ namespace FullAutoTOC
                 int n2 = t3.IndexOf("BIOGame");
                 if (n2 >= 0)
                 {
-                    pathbase = Path.GetDirectoryName(Path.GetDirectoryName(consoletocFile)) + "\\";
+                    pathbase = Path.GetDirectoryName(Path.GetDirectoryName(folderToTOC)) + "\\";
                 }
                 else
                 {
-                    pathbase = consoletocFile;
+                    pathbase = folderToTOC;
                 }
-                CreateUnpackedTOC(pathbase, consoletocFile + "PCConsoleTOC.bin", files.ToArray());
+                CreateUnpackedTOC(pathbase, folderToTOC + "PCConsoleTOC.bin", files.ToArray());
             }
         }
 
