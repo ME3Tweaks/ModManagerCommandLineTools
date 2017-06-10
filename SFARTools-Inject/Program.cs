@@ -11,13 +11,13 @@ namespace SFARTools_Inject
 {
     class Options
     {
-        [OptionArray('r', "replacefiles", HelpText = "Replaces files in an SFAR archive. This used to be known as injection.")]
+        [Option('r', "replacefiles", HelpText = "Replaces files in an SFAR archive. This used to be known as injection.")]
         public bool ReplaceFiles { get; set; }
 
         [Option('s', "sfarpath", Required = true, HelpText = "Path to SFAR archive to operate on.")]
         public string SFARPath { get; set; }
 
-        [OptionArray('a', "addfiles", HelpText = "Adds files to an SFAR archive. If the files already exist, they will be replaced.")]
+        [Option('a', "addfiles", HelpText = "Adds files to an SFAR archive. If the files already exist, they will be replaced.")]
         public bool AddFiles { get; set; }
 
         [Option('d', "deletefiles", HelpText = "Deletes files from an SFAR archive. If the file in the archive is not found, it is skipped.")]
@@ -26,8 +26,8 @@ namespace SFARTools_Inject
         [Option('i', "ignoredeletionerrors", DefaultValue = false, HelpText = "Only usable with --deletfiles. Will ignore missing files in the archive, in the event they've already been deleted before.")]
         public bool IgnoreDeletionErrors { get; set; }
 
-        [OptionList('f', "files", Required = true, HelpText = "List of files and paths. For --addfiles and --replacefiles the files in this list should be in alternating fashion, starting with the path to the source file then the path in the SFAR archive. For --deletefiles this is a list of paths in the SFAR archive to delete.")]
-        public List<String> Files { get; set; }
+        [OptionArray('f', "files", Required = true, HelpText = "List of files and paths. For --addfiles and --replacefiles the files in this list should be in alternating fashion, starting with the path in the SFAR archive followed by the path to the new file to use, on disk. For --deletefiles this is a list of paths in the SFAR archive to delete.")]
+        public string[] Files { get; set; }
 
         [HelpOption]
         public string GetUsage()
@@ -41,7 +41,7 @@ namespace SFARTools_Inject
     {
         static void Main(string[] args)
         {
-            Options options = new Options();
+            var options = new Options();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 // validation
@@ -59,16 +59,17 @@ namespace SFARTools_Inject
 
                 if (options.ReplaceFiles || options.AddFiles)
                 {
-                    if (options.Files.Count / 2 != 0)
+                    if (options.Files.Length / 2 != 0)
                     {
                         //requires even number of args
                     }
-                    int numfiles = options.Files.Count / 2;
-                    string[] sfarFiles = new string[options.Files.Count / 2];
-                    string[] diskFiles = new string[options.Files.Count / 2];
+                    int numfiles = options.Files.Length / 2;
+                    string[] sfarFiles = new string[numfiles];
+                    string[] diskFiles = new string[numfiles];
 
                     int getindex = 0;
-                    for (int i = 0; i < options.Files.Count; i++, getindex++)
+                    int fileslength = options.Files.Length;
+                    for (int i = 0; i < fileslength - 1; i++, getindex++)
                     {
                         sfarFiles[getindex] = options.Files[i];
                         i++;
@@ -110,9 +111,11 @@ namespace SFARTools_Inject
                             if ((index >= 0 && options.AddFiles) || options.ReplaceFiles)
                             {
                                 dlc.ReplaceEntry(diskFiles[i], index);
+                                Console.WriteLine("Updated SFAR file: " +sfarFiles[i]);
                             } else
                             {
                                 dlc.AddFileQuick(diskFiles[i], sfarFiles[i]);
+                                Console.WriteLine("Added SFAR file: " + sfarFiles[i]);
                             }
                         }
                         EndProgram(0);

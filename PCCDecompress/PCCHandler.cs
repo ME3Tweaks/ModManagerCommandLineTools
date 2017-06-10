@@ -178,11 +178,24 @@ namespace PCCDecompress
         }
 
         /// <summary>
+        ///     compress an entire pcc file.
+        /// </summary>
+        /// <param name="pccFileName">pcc file's name to open.</param>
+        /// <returns>a compressed array of bytes.</returns>
+        public static byte[] Compress(string pccFileName)
+        {
+            using (FileStream input = File.OpenRead(pccFileName))
+            {
+                return Compress(input).ToArray();
+            }
+        }
+
+        /// <summary>
         ///     compress an entire pcc into a byte array.
         /// </summary>
         /// <param name="uncompressedPcc">uncompressed pcc stream.</param>
         /// <returns>a compressed array of bytes.</returns>
-        public static Stream Compress(Stream uncompressedPcc)
+        public static MemoryStream Compress(Stream uncompressedPcc)
         {
             uncompressedPcc.Position = 0;
 
@@ -258,7 +271,7 @@ namespace PCCDecompress
             }
 
             const uint maxBlockSize = 0x100000;
-            Stream outputStream = new MemoryStream();
+            MemoryStream outputStream = new MemoryStream();
             // copying pcc header
             byte[] buffer = new byte[130];
             uncompressedPcc.Seek(0, SeekOrigin.Begin);

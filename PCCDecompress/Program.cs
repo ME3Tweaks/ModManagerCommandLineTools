@@ -16,7 +16,7 @@ namespace PCCDecompress
         public string InputFile { get; set; }
 
         [Option('m', "inputfolder",
-          HelpText = "Input folder that contains pccs  to decompress.  Will overwrite the original files unless --outputfolder is used.")]
+          HelpText = "Input folder that contains pccs to decompress.  Will overwrite the original files unless --outputfolder is used.")]
         public string InputFolder { get; set; }
 
         [Option('o', "outputfile",
@@ -28,9 +28,9 @@ namespace PCCDecompress
         public string OutputFolder { get; set; }
 
         // omitting long name, default --verbose
-        [Option(DefaultValue = true,
-          HelpText = "Prints all messages to standard output.")]
-        public bool Verbose { get; set; }
+        [Option('c', "compress", DefaultValue = false,
+          HelpText = "Compress instead of decompress.")]
+        public bool Compress { get; set; }
 
         [ParserState]
         public IParserState LastParserState { get; set; }
@@ -83,10 +83,10 @@ namespace PCCDecompress
                     Console.WriteLine("Ambiguous operation specified: This program requires only --inputfile or --inputfolder to be specified, but not both.");
                     EndProgram(1);
                 }
-                
+
                 if (options.InputFile != null && !File.Exists(options.InputFile))
                 {
-                    Console.WriteLine("Input file does not exist: "+options.InputFile);
+                    Console.WriteLine("Input file does not exist: " + options.InputFile);
                     EndProgram(1);
                 }
                 if (options.InputFolder != null && !Directory.Exists(options.InputFolder))
@@ -95,7 +95,7 @@ namespace PCCDecompress
                     EndProgram(1);
                 }
 
-                if (options.OutputFolder!= null && !options.OutputFolder.EndsWith("\\"))
+                if (options.OutputFolder != null && !options.OutputFolder.EndsWith("\\"))
                 {
                     options.OutputFolder += "\\";
                 }
@@ -122,17 +122,19 @@ namespace PCCDecompress
                     Console.WriteLine("No pcc's found in the specified folder.");
                 }
 
+                string prefix = (options.Compress) ? "Compressed" : "Decompressed";
+
                 Parallel.ForEach(pccFiles, f =>
                 {
                     //Console.WriteLine("Decompressing " + f + "...");
-                    byte[] decompressedData = PCCHandler.Decompress(f);
+                    byte[] decompressedData = (options.Compress) ? PCCHandler.Compress(f) : PCCHandler.Decompress(f);
                     if (decompressedData != null)
                     {
                         string fname = Path.GetFileName(f);
                         string outpath = baseoutputpath + fname;
-                        Console.WriteLine("Writing to " + outpath);
+                        //Console.WriteLine("Writing to " + outpath);
                         File.WriteAllBytes(outpath, decompressedData);
-                        Console.WriteLine("Decompressed "+f);
+                        Console.WriteLine(prefix+" " + f);
                     }
                 }
                 );

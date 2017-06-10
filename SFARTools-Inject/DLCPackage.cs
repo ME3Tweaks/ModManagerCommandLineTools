@@ -127,7 +127,7 @@ namespace SFARTools_Inject
         public static readonly byte[] TOCHash = { 0xB5, 0x50, 0x19, 0xCB, 0xF9, 0xD3, 0xDA, 0x65, 0xD5, 0x5B, 0x32, 0x1C, 0x00, 0x19, 0x69, 0x7C };
 
         public HeaderStruct Header;
-        public List<FileEntryStruct> Files;
+        public FileEntryStruct[] Files;
 
         public long UncompressedSize
         {
@@ -162,7 +162,8 @@ namespace SFARTools_Inject
             Header.Serialize(con);
             con.Seek((int)Header.EntryOffset, SeekOrigin.Begin);
             if (con.isLoading)
-                Files = new List<FileEntryStruct>();//[Header.FileCount];
+                //Files = new List<FileEntryStruct>();//[Header.FileCount];
+                Files = new FileEntryStruct[Header.FileCount];
             for (int i = 0; i < Header.FileCount; i++)
                 Files[i].Serialize(con, Header);
             if (con.isLoading)
@@ -486,7 +487,7 @@ namespace SFARTools_Inject
                 List<FileEntryStruct> l = new List<FileEntryStruct>();
                 l.AddRange(Files);
                 l.RemoveAt(Index);
-                Files = l;//.ToArray();
+                Files = l.ToArray();
                 Header.FileCount--;
                 //DebugOutput.PrintLn("Rebuilding...");
                 ReBuild();
@@ -529,7 +530,7 @@ namespace SFARTools_Inject
                     l.RemoveAt(Index[i]);
                     Header.FileCount--;
                 }
-                Files = l;//.ToArray();
+                Files = l.ToArray();
                 ReBuild();
             }
             catch (Exception ex)
@@ -609,7 +610,7 @@ namespace SFARTools_Inject
             e.UncompressedSizeAdder = 0;
             tmp.Add(e);
             e = new FileEntryStruct();
-            Files = tmp;//.ToArray();
+            Files = tmp.ToArray();
             //
             //Find TOC
             //DebugOutput.PrintLn("Searching TOC...");
@@ -759,7 +760,7 @@ namespace SFARTools_Inject
 
         public int FindFileEntry(string fileName)
         {
-            return Files.IndexOf(Files.FirstOrDefault(x => x.FileName.Contains(fileName)));
+            return Files.ToList().IndexOf(Files.FirstOrDefault(x => x.FileName.ToLower().Contains(fileName.ToLower())));
         }
 
         private int FindTOC()

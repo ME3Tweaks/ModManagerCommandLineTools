@@ -23,13 +23,13 @@ namespace SFARTools
         [Option('f', "FlatFolderExtraction", DefaultValue = false, HelpText = "Specifies that files being extracted will be placed all into the --OutputPath folder directly, rather than with the original SFAR file path.")]
         public bool FlatFolder { get; set; }
 
-        [Option('a', "ExtractEntireArchive", DefaultValue = false, HelpText = "Extracts the entire spcified archive (--sfarpath).")]
+        [Option('a', "ExtractEntireArchive", DefaultValue = false, HelpText = "Extracts the entire spcified archive (--sfarpath). Requires --OutputPath.")]
         public bool ExtractEntireArchive { get; set; }
 
         [Option('k', "KeepaAchiveIntact", DefaultValue = false, HelpText = "Leaves the original SFAR alone, performing read-only operations. Can be used with --GamePath and --ExtractEntireArchive.")]
         public bool KeepArchiveIntact { get; set; }
 
-        [OptionList('g', "GamePath", HelpText = "Extracts all archives available from the game directory specified.")]
+        [Option('g', "GamePath", HelpText = "Extracts all archives available from the game directory specified.")]
         public string GamePath { get; set; }
 
         [OptionList('i', "IgnoreMissingPaths", DefaultValue = false, HelpText = "Supresses errors about missing files in the archive. Only works with --extractfilenames.")]
@@ -52,7 +52,7 @@ namespace SFARTools
             {
                 if (options.SFARPath == null && options.GamePath == null)
                 {
-                    Console.WriteLine("To use this program you must use --sfarpath or --gamepath. Use --help for more information.");
+                    Console.WriteLine("This program requires --gamepath or --sfarpath, or both depending on the chosen options.");
                     EndProgram(1);
                 }
                 if (options.SFARPath != null)
@@ -92,7 +92,7 @@ namespace SFARTools
                     {
                         //extract the whole archive
                         Console.WriteLine("Extracting archive...");
-                        sfar.extract();
+                        sfar.extract(options.OutputPath);
                     }
 
                 }
