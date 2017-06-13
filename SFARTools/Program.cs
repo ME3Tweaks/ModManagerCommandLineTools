@@ -64,14 +64,14 @@ namespace SFARTools
                         Console.WriteLine("Ambiguous input: --extractfilenames and --gamepath were both specified. You can only use one.");
                         EndProgram(1);
                     }
-                    if (!options.ExtractEntireArchive && options.ExtractList == null || options.ExtractList.Length == 0)
+                    if (!options.ExtractEntireArchive || (options.ExtractList != null && options.ExtractList.Length == 0))
                     {
                         Console.WriteLine("No extraction operation was specified. Use --ExtractEntireArchive or a list following --ExtractFilenames.");
                         EndProgram(1);
                     }
-                    if (options.ExtractEntireArchive && options.ExtractList.Length > 0)
+                    if (options.ExtractEntireArchive && options.ExtractList != null && options.ExtractList.Length > 0)
                     {
-                        Console.WriteLine("Ambiguous input: --ExtractFilenames and --gamepath were both specified. You can only use one.");
+                        Console.WriteLine("Ambiguous input: --ExtractEntireArchive and --ExtractFilenames were both specified. You can only use one of these options.");
                         EndProgram(1);
                     }
                     if (!File.Exists(options.SFARPath))
@@ -80,8 +80,8 @@ namespace SFARTools
                         EndProgram(1);
                     }
                     SFAR sfar = new SFAR(options.SFARPath);
-
-                    if (options.ExtractList.Length > 0)
+                    Console.WriteLine("OutputPath: " + options.OutputPath);
+                    if (options.ExtractList != null && options.ExtractList.Length > 0)
                     {
                         //Extract a list of files
                         sfar.extractfiles(options.OutputPath, options.ExtractList, true);
@@ -91,7 +91,7 @@ namespace SFARTools
                     else
                     {
                         //extract the whole archive
-                        Console.WriteLine("Extracting archive...");
+                        Console.WriteLine("Extracting archive: "+options.SFARPath+"...");
                         sfar.extract(options.OutputPath);
                     }
 

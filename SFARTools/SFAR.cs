@@ -270,7 +270,7 @@ namespace SFARTools
 
                 using (FileStream outputFile = new FileStream(dir + filename, FileMode.Create, FileAccess.Write))
                 {
-                    Console.WriteLine("Extracting: " + filesList[i].filenamePath + " to "+outputFile.Name);
+                    Console.WriteLine("Extracting: " + filesList[i].filenamePath + " to " + outputFile.Name);
 
                     sfarFile.JumpTo(filesList[i].dataOffset);
                     if (filesList[i].compressedBlockSizesIndex == -1)
@@ -327,12 +327,14 @@ namespace SFARTools
         /// </summary>
         /// <param name="outPath">Directory to output files to. If null, it will place them in the same DLC folder structure as in the archive.</param>
         /// <param name="readOnly">Indicates that the original SFAR should not be modified.</param>
-        public void extract(string outPath = null, bool readOnly = false)
+        public void extract(string outPath = null, bool keepbiogamedlc = true, bool readOnly = false)
         {
+            string stagedfile = Directory.GetParent(sfarfilelocation) + "\\Default.sfar.STAGED";
             if (!readOnly)
             {
-                Directory.CreateDirectory(Path.Combine(outPath, "CookedPCConsole"));
-                using (FileStream outputFile = new FileStream(Path.Combine(outPath, "CookedPCConsole", "Default.sfar.STAGED"), FileMode.Create, FileAccess.Write))
+                //Directory.CreateDirectory(Path.Combine(outPath, "CookedPCConsole"));
+                Console.WriteLine("Creating staged file: " + stagedfile);
+                using (FileStream outputFile = new FileStream(stagedfile, FileMode.Create, FileAccess.Write))
                 {
                     outputFile.WriteUInt32(SfarTag);
                     outputFile.WriteUInt32(SfarVersion);
@@ -352,13 +354,19 @@ namespace SFARTools
                 if (filesList[i].filenamePath == null)
                     throw new Exception("filename missing");
 
-
-                int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
-                string filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
-                string dir = Path.GetDirectoryName(outPath);
+                string filename = filesList[i].filenamePath.Replace('/', '\\'); ;
+                string dir = outPath;
+                if (!keepbiogamedlc)
+                {
+                    int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
+                    filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
+                    dir = Path.GetDirectoryName(outPath);
+                }
                 Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
+                Console.WriteLine("Extracting " + (dir + filename));
                 using (FileStream outputFile = new FileStream(dir + filename, FileMode.Create, FileAccess.Write))
                 {
+                    Console.WriteLine("Extracting " + (dir + filename));
                     sfarFile.JumpTo(filesList[i].dataOffset);
                     if (filesList[i].compressedBlockSizesIndex == -1)
                     {
@@ -406,6 +414,13 @@ namespace SFARTools
                         }
                     }
                 }
+            }
+            if (!readOnly)
+            {
+                sfarFile.Close();
+                sfarFile.Dispose();
+                File.Delete(sfarfilelocation);
+                File.Move(stagedfile, sfarfilelocation);
             }
         }
 
