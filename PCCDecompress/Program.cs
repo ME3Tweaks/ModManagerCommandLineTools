@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using CommandLine.Text;
+using ME3Explorer.Unreal;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -123,18 +124,27 @@ namespace PCCDecompress
                 }
 
                 string prefix = (options.Compress) ? "Compressed" : "Decompressed";
-
+                Directory.CreateDirectory(baseoutputpath);
                 Parallel.ForEach(pccFiles, f =>
                 {
-                    //Console.WriteLine("Decompressing " + f + "...");
-                    byte[] decompressedData = (options.Compress) ? PCCHandler.Compress(f) : PCCHandler.Decompress(f);
-                    if (decompressedData != null)
+                    string fname = Path.GetFileName(f);
+                    string outpath = baseoutputpath + fname;
+                    if (options.Compress)
                     {
-                        string fname = Path.GetFileName(f);
-                        string outpath = baseoutputpath + fname;
-                        //Console.WriteLine("Writing to " + outpath);
-                        File.WriteAllBytes(outpath, decompressedData);
-                        Console.WriteLine(prefix+" " + f);
+                        byte[] decompressedData = PCCHandler.Compress(f);
+                        if (decompressedData != null)
+                        {
+                           
+                            //Console.WriteLine("Writing to " + outpath);
+                            File.WriteAllBytes(outpath, decompressedData);
+                            Console.WriteLine(prefix + " " + f + ", " + decompressedData.Length + " bytes out");
+                        }
+                    } else
+                    {
+                        PCCObject pcc = new PCCObject(f);
+                        pcc.save(outpath);
+                        FileInfo fi = new FileInfo(outpath);
+                        Console.WriteLine(prefix + " " + f + ", " + fi.Length + " bytes out");
                     }
                 }
                 );

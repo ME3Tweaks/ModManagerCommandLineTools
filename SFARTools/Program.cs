@@ -64,7 +64,7 @@ namespace SFARTools
                         Console.WriteLine("Ambiguous input: --extractfilenames and --gamepath were both specified. You can only use one.");
                         EndProgram(1);
                     }
-                    if (!options.ExtractEntireArchive || (options.ExtractList != null && options.ExtractList.Length == 0))
+                    if ((!options.ExtractEntireArchive && options.ExtractList == null) || (options.ExtractList != null && options.ExtractList.Length == 0))
                     {
                         Console.WriteLine("No extraction operation was specified. Use --ExtractEntireArchive or a list following --ExtractFilenames.");
                         EndProgram(1);

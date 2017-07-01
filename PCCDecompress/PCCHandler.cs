@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Gibbed.IO;
 using AmaroK86.MassEffect3.ZlibBlock;
-using System.Threading.Tasks;
 
 namespace PCCDecompress
 {
@@ -62,7 +61,7 @@ namespace PCCDecompress
             if (versionLo != 684 &&
                 versionHi != 194)
             {
-                throw new FormatException("unsupported pcc version - this tool only works with ME3 PCC files.");
+                throw new FormatException("unsupported pcc version");
             }
 
             long headerSize = 8;
@@ -84,9 +83,7 @@ namespace PCCDecompress
 
             if ((packageFlags & 0x02000000u) == 0)
             {
-                Console.WriteLine("This PCC file is already decompressed.");
-                input.Seek(0, SeekOrigin.Begin);
-                return input.ReadBytes((int)input.Length);
+                throw new FormatException("pcc file is already decompressed");
             }
 
             if ((packageFlags & 8) != 0)
@@ -132,16 +129,6 @@ namespace PCCDecompress
                     output.WriteFromStream(input, nameOffset - curPos);
                 }
 
-                //Parallel.For(0, blockCount, b =>
-                //{
-                //    uint dstLen = 0;
-                //    ChunkBlock block = blocks[b];
-                //    if (compressionType == CompressionType.Zlib)
-                //        dstLen = ZlibHelper.Zlib.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
-                //    if (dstLen != block.uncomprSize)
-                //        throw new Exception("Decompressed data size not expected!");
-                //});
-
                 for (int i = 0; i < blockCount; i++)
                 {
                     input.Seek(headBlockOff, SeekOrigin.Begin);
@@ -178,24 +165,11 @@ namespace PCCDecompress
         }
 
         /// <summary>
-        ///     compress an entire pcc file.
-        /// </summary>
-        /// <param name="pccFileName">pcc file's name to open.</param>
-        /// <returns>a compressed array of bytes.</returns>
-        public static byte[] Compress(string pccFileName)
-        {
-            using (FileStream input = File.OpenRead(pccFileName))
-            {
-                return Compress(input).ToArray();
-            }
-        }
-
-        /// <summary>
         ///     compress an entire pcc into a byte array.
         /// </summary>
         /// <param name="uncompressedPcc">uncompressed pcc stream.</param>
         /// <returns>a compressed array of bytes.</returns>
-        public static MemoryStream Compress(Stream uncompressedPcc)
+        public static Stream Compress(Stream uncompressedPcc)
         {
             uncompressedPcc.Position = 0;
 
@@ -271,7 +245,7 @@ namespace PCCDecompress
             }
 
             const uint maxBlockSize = 0x100000;
-            MemoryStream outputStream = new MemoryStream();
+            Stream outputStream = new MemoryStream();
             // copying pcc header
             byte[] buffer = new byte[130];
             uncompressedPcc.Seek(0, SeekOrigin.Begin);
@@ -387,6 +361,28 @@ namespace PCCDecompress
         public static void CompressAndSave(byte[] uncompressedPcc, string pccFileName)
         {
             CompressAndSave(new MemoryStream(uncompressedPcc), pccFileName);
+        }
+
+        /// <summary>
+        ///     compress an entire pcc file.
+        /// </summary>
+        /// <param name="pccFileName">pcc file's name to open.</param>
+        /// <returns>a compressed array of bytes.</returns>
+        public static byte[] Compress(string pccFileName)
+        {
+            using (FileStream input = File.OpenRead(pccFileName))
+            {
+                return ReadFully(Compress(input));//.ToArray();
+            }
+        }
+
+        public static byte[] ReadFully(Stream input)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                input.CopyTo(ms);
+                return ms.ToArray();
+            }
         }
     }
 }
