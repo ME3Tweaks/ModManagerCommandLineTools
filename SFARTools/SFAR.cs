@@ -326,6 +326,7 @@ namespace SFARTools
         /// Extracts the entire archive
         /// </summary>
         /// <param name="outPath">Directory to output files to. If null, it will place them in the same DLC folder structure as in the archive.</param>
+        /// <param name="keepbiogamedlc">Keeps the biogame/dlc data (relative to the root of the game directory). Otherwise, this removes the common prefix of all files in the archive.</param>
         /// <param name="readOnly">Indicates that the original SFAR should not be modified.</param>
         public void extract(string outPath = null, bool keepbiogamedlc = true, bool readOnly = false)
         {

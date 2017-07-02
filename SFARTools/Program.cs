@@ -92,7 +92,7 @@ namespace SFARTools
                     {
                         //extract the whole archive
                         Console.WriteLine("Extracting archive: "+options.SFARPath+"...");
-                        sfar.extract(options.OutputPath);
+                        sfar.extract(options.OutputPath, true, options.KeepArchiveIntact);
                     }
 
                 }
