@@ -26,7 +26,7 @@ namespace SFARTools
         [Option('a', "ExtractEntireArchive", DefaultValue = false, HelpText = "Extracts the entire spcified archive (--sfarpath). Requires --OutputPath.")]
         public bool ExtractEntireArchive { get; set; }
 
-        [Option('k', "KeepaAchiveIntact", DefaultValue = false, HelpText = "Leaves the original SFAR alone, performing read-only operations. Can be used with --GamePath and --ExtractEntireArchive.")]
+        [Option('k', "KeepArchiveIntact", DefaultValue = false, HelpText = "Leaves the original SFAR alone, performing read-only operations. Can be used with --GamePath and --ExtractEntireArchive.")]
         public bool KeepArchiveIntact { get; set; }
 
         [Option('g', "GamePath", HelpText = "Extracts all archives available from the game directory specified.")]
