@@ -190,7 +190,8 @@ namespace PCCDecompress
             if (versionLo != 684 &&
                 versionHi != 194)
             {
-                throw new FormatException("unsupported version");
+                Console.WriteLine("Unsupported pcc file - this does not appear to a x86 ME3 PCC file.");
+                Environment.Exit(1);
             }
 
             uncompressedPcc.Seek(4, SeekOrigin.Current);
@@ -218,11 +219,7 @@ namespace PCCDecompress
             if ((packageFlags & 0x02000000) == 0)
             {
                 data = uncompressedPcc;
-            }
-            else
-            {
-                throw new FormatException("pcc data is compressed");
-            }
+            
 
             // get info about export data, sizes and offsets
             data.Seek(exportInfosOffset, SeekOrigin.Begin);
@@ -342,6 +339,14 @@ namespace PCCDecompress
             outputStream.Seek(0, SeekOrigin.Begin);
 
             return outputStream;
+            }
+            else
+            {
+                Console.WriteLine("PCC is already compressed.");
+                Environment.Exit(0); //Exit with 0 as this isn't a program error.
+                //throw new FormatException("pcc data is compressed");
+                return null; //this will never be reached
+            }
         }
 
         /// <summary>
