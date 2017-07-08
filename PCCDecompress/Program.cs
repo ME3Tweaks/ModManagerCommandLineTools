@@ -134,17 +134,33 @@ namespace PCCDecompress
                         byte[] decompressedData = PCCHandler.Compress(f);
                         if (decompressedData != null)
                         {
-                           
+
                             //Console.WriteLine("Writing to " + outpath);
                             File.WriteAllBytes(outpath, decompressedData);
                             Console.WriteLine(prefix + " " + f + ", " + decompressedData.Length + " bytes out");
                         }
-                    } else
+                    }
+                    else
                     {
                         PCCObject pcc = new PCCObject(f);
-                        pcc.save(outpath);
-                        FileInfo fi = new FileInfo(outpath);
-                        Console.WriteLine(prefix + " " + f + ", " + fi.Length + " bytes out");
+                        if (pcc.bCompressed)
+                        {
+                            pcc.save(outpath);
+                            FileInfo fi = new FileInfo(outpath);
+                            Console.WriteLine(prefix + " " + f + ", " + fi.Length + " bytes out");
+                        }
+                        else
+                        {
+                            if (f.ToLower().Equals(outpath.ToLower()))
+                            {
+                                Console.WriteLine("PCC is already decompressed. Destination is same as source. Leaving alone.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("PCC is already decompressed. Copying file instead.");
+                                File.Copy(f, outpath, true);
+                            }
+                        }
                     }
                 }
                 );
