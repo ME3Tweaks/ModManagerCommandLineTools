@@ -453,8 +453,8 @@ namespace TransplanterLib
                     if (pcc.getClassName(exp.classId) == "GFxMovieInfo")
                     {
                         //pcc.
-                        
-                        string packobjname = pcc.resolvePackagePath((int)exp.id+1);
+
+                        string packobjname = pcc.resolvePackagePath((int)exp.id + 1);
                         int index = packobjnames.IndexOf(packobjname);
                         if (index > -1)
                         {
@@ -470,7 +470,7 @@ namespace TransplanterLib
                 if (replaced)
                 {
                     //pcc.saveByReconstructing(destinationFile); //34 is default
-                    Console.WriteLine("Saving pcc: " + destinationFile);
+                    Console.WriteLine("Saving pcc: " + destinationFile + (forceCompressed ? ", attempting to compress" : ""));
                     pcc.SaveToFile(false, forceCompressed == true, forceCompressed == false, destinationFile);
                     pcc.Dispose();
                     // pcc.save(destinationFile);

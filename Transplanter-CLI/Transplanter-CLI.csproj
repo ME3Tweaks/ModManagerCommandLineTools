@@ -138,15 +138,16 @@
   </Target>
   <Import Project="..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets" Condition="Exists('..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)" /y
+    <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)"
+copy /y "$(SolutionDir)dlls\elevate.exe"  "$(SolutionDir)Output\$(Platform)\elevate.exe" /y
 
 if $(Platform)==x86 copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
 if $(Platform)==x86 copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll" /y
 
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll" /y
-
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\zlibwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\zlibwrapper.dll" /y
+
 copy /y "$(TargetPath)" "C:\Users\Michael\workspace\modmanager3\data\tools\ModManagerCommandLine\$(Platform)\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

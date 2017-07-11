@@ -294,6 +294,11 @@ namespace TransplanterLib
                         endProgram(CODE_INPUT_FILE_NOT_FOUND);
                     }
 
+                    if (options.Compress)
+                    {
+                        Console.WriteLine("Compression option is enabled.");
+                    }
+
                     if (options.InputFile != null)
                     {
                         Console.WriteLine("Injecting SWF into " + options.TargetFile);
