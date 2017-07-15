@@ -860,11 +860,16 @@ namespace TransplanterLib
                 {
                     UnrealObjectInfo.loadfromJSON();
                 }
+                StreamWriter stringoutput = StreamWriter.Null;
+                if (imports || exports ||  data || scripts ||coalesced ||names ||properties ||pathfindingmesh)
+                {
+                    //dumps data.
+                    string savepath = outfolder + Path.GetFileNameWithoutExtension(file) + ".txt";
+                    Directory.CreateDirectory(Path.GetDirectoryName(savepath));
+                    stringoutput = new StreamWriter(savepath);
+                }
 
-                string savepath = outfolder + Path.GetFileNameWithoutExtension(file) + ".txt";
-                Directory.CreateDirectory(Path.GetDirectoryName(savepath));
-
-                using (StreamWriter stringoutput = new StreamWriter(savepath))
+                using (stringoutput)
                 {
 
                     if (imports)
@@ -889,7 +894,7 @@ namespace TransplanterLib
                         stringoutput.WriteLine("--End of Imports");
                     }
 
-                    if (exports || scripts || data || coalesced || pathfindingmesh)
+                    if (exports || scripts || data || coalesced || pathfindingmesh || swf)
                     {
                         string datasets = "";
                         if (exports)
@@ -952,7 +957,7 @@ namespace TransplanterLib
                                 lastProgress += 10;
                             }
 
-                            if (exports || data || isScript || isCoalesced || pathfindingmesh)
+                            if (exports || data || isScript || (coalesced && isCoalesced) || pathfindingmesh)
                             {
                                 if (separateExports || (pathfindingmesh && isPathfindingNode))
                                 {
