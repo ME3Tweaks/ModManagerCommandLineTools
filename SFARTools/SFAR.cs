@@ -364,7 +364,6 @@ namespace SFARTools
                     dir = Path.GetDirectoryName(outPath);
                 }
                 Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
-                Console.WriteLine("Extracting " + (dir + filename));
                 using (FileStream outputFile = new FileStream(dir + filename, FileMode.Create, FileAccess.Write))
                 {
                     Console.WriteLine("Extracting " + (dir + filename));
