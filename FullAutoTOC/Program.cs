@@ -214,11 +214,18 @@ namespace FullAutoTOC
                         long installedsize = new FileInfo(sfar).Length;
                         if (installedsize != size)
                         {
-                            //AutoTOC it
-                            DLCPackage dlc = new DLCPackage(sfar);
-                            dlc.UpdateTOCbin();
-                            Console.WriteLine(foldername + " - Ran SFAR TOC");
-
+                            if (installedsize > size)
+                            {
+                                //AutoTOC it - SFAR is not unpacked
+                                DLCPackage dlc = new DLCPackage(sfar);
+                                dlc.UpdateTOCbin();
+                                Console.WriteLine(foldername + " - Ran SFAR TOC");
+                            } else
+                            {
+                                //AutoTOC it - SFAR is unpacked
+                                CreateUnpackedTOC(currentfolder);
+                                Console.WriteLine(foldername + " - Ran Unpacked TOC");
+                            }
                         }
                         else
                         {

@@ -9,6 +9,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © ME3Tweaks 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.0.0.20")]
-[assembly: AssemblyFileVersion("1.0.0.20")]
+[assembly: AssemblyVersion("1.0.0.21")]
+[assembly: AssemblyFileVersion("1.0.0.21")]
 
