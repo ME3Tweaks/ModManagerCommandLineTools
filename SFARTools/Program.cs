@@ -32,9 +32,6 @@ namespace SFARTools
         [Option('g', "GamePath", HelpText = "Extracts all archives available from the game directory specified.")]
         public string GamePath { get; set; }
 
-        [OptionList('i', "IgnoreMissingPaths", DefaultValue = false, HelpText = "Supresses errors about missing files in the archive. Only works with --extractfilenames.")]
-        public bool IgnoreMissingPaths { get; set; }
-
         [HelpOption]
         public string GetUsage()
         {

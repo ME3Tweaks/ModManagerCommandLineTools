@@ -7,6 +7,8 @@ using MassEffectModder;
 using TransplanterLib;
 using System.Reflection;
 using static TransplanterLib.TransplanterLib;
+using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Transplanter CLI - Main Class
@@ -30,6 +32,10 @@ namespace TransplanterLib
         [Option('t', "targetfile",
             HelpText = "File to be operated on.")]
         public string TargetFile { get; set; }
+
+        [Option("tlkcache",
+            HelpText = "Path to folder containing TLKs to load when dumping PCC properties.")]
+        public string TlkCachePath { get; set; }
 
         [Option("compress",
             HelpText = "Forces output pcc files to be compressed.")]
@@ -347,11 +353,23 @@ namespace TransplanterLib
                         bool[] dumpargs = new bool[] { options.Imports, options.Exports, options.Data, options.Scripts, options.Coalesced, options.Names, !options.LineSeparator, options.Properties, false, options.SWFs };
 
 
+                        if ((options.InputFile != null || options.InputFolder != null) && options.TlkCachePath != null && Directory.Exists(options.TlkCachePath))
+                        {
+                            //Load TLKs
+                            var ext = new List<string> { "tlk" };
+                            var tlks = Directory.EnumerateFiles(options.TlkCachePath, "*INT.tlk", SearchOption.AllDirectories);
+                            Console.WriteLine("Loading " + tlks.Count() + " TLK(s) from " + options.TlkCachePath);
+                            foreach (string tlk in tlks)
+                            {
+                                TalkFiles.addTLK(tlk);
+                            }
+                        }
+
                         if (options.InputFile != null)
                         {
                             Console.Out.WriteLine("Dumping pcc data of " + options.InputFile +
                             " [Imports: " + options.Imports + ", Exports: " + options.Exports + ", Data: " + options.Data + ", Scripts: " + options.Scripts +
-                            ", Coalesced: " + options.Coalesced + ", Names: " + options.Names + ", Properties: " + options.Properties + ", SWF: "+options.SWFs+"]");
+                            ", Coalesced: " + options.Coalesced + ", Names: " + options.Names + ", Properties: " + options.Properties + ", SWF: " + options.SWFs + "]");
                             dumpPCCFile(options.InputFile, dumpargs, options.OutputFolder);
                         }
                         if (options.InputFolder != null)
@@ -398,7 +416,7 @@ namespace TransplanterLib
                     writeVerboseLine("Extracting GFX Files from source to " + gfxfolder);
                     extractAllGFxMovies(options.InputFile, gfxfolder);
                     Console.WriteLine("Installing GUI files");
-                    replaceSWFs(gfxfolder, options.TargetFile,options.Compress);
+                    replaceSWFs(gfxfolder, options.TargetFile, options.Compress);
                 }
                 else
                 {

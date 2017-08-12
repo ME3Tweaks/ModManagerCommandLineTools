@@ -320,7 +320,7 @@ namespace SFARTools_Inject
             fs.Close();
             return res;
         }
-        
+
 
         internal class InputBlock
         {
@@ -337,7 +337,7 @@ namespace SFARTools_Inject
                 IsCompressed = uncompressedSize > 0;
             }
         }
-        
+
 
         public static byte[] ComputeHash(string input)
         {
@@ -527,6 +527,7 @@ namespace SFARTools_Inject
                 l.AddRange(Files);
                 for (int i = 0; i < Index.Count; i++)
                 {
+                    Console.WriteLine("Removing item at index " + i + ": " + Files[i].FileName);
                     l.RemoveAt(Index[i]);
                     Header.FileCount--;
                 }
@@ -616,14 +617,17 @@ namespace SFARTools_Inject
             //DebugOutput.PrintLn("Searching TOC...");
             int f = FindTOC();
             if (f == -1)
+            {
+                Console.WriteLine("Unable to find TOC file in SFAR!");
                 return;
+            }
             //DebugOutput.PrintLn("Found TOC, adding line...");
             MemoryStream m = DecompressEntry(f, fs);
             //
             //Update TOC
-            //WriteString(m, path);
-            //m.WriteByte(0xD);
-            //m.WriteByte(0xA);
+            WriteString(m, path);
+            m.WriteByte(0xD);
+            m.WriteByte(0xA);
             //
             //Append new FileTable
             int count = (int)Header.FileCount + 1;
@@ -760,7 +764,18 @@ namespace SFARTools_Inject
 
         public int FindFileEntry(string fileName)
         {
-            return Files.ToList().IndexOf(Files.FirstOrDefault(x => x.FileName.ToLower().Contains(fileName.ToLower())));
+            int index = -1;
+            int i = 0;
+            foreach (FileEntryStruct file in Files)
+            {
+                if (file.FileName.ToLower().Contains(fileName.ToLower()))
+                {
+                    index = i;
+                    break;
+                }
+                i++;
+            }
+            return index;
         }
 
         private int FindTOC()

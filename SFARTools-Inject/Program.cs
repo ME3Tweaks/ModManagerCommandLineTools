@@ -148,7 +148,7 @@ namespace SFARTools_Inject
                             indexesToDelete.Add(idx);
                         }
                     }
-                    if (indexesToDelete.Count > 1)
+                    if (indexesToDelete.Count > 0)
                     {
                         dlc.DeleteEntries(indexesToDelete);
                     } else

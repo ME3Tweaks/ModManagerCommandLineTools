@@ -94,7 +94,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)"
-copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
+copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
 copy /y "$(TargetPath)" "C:\Users\Michael\workspace\modmanager3\data\tools\ModManagerCommandLine\$(Platform)\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

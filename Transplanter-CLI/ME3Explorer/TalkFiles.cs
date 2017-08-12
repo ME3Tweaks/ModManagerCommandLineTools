@@ -54,22 +54,14 @@ namespace TransplanterLib
             }
         }
 
-        private static void SaveTLKList()
-        {
-            string path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase) + "\\LoadedTLKs.JSON";
-            File.WriteAllText(path, JsonConvert.SerializeObject(tlkList.Select(x => x.path)));
-        }
-
         public static void addTLK(string fileName)
         {
             LoadTlkData(fileName);
-            SaveTLKList();
         }
 
         public static void removeTLK(int index)
         {
             tlkList.RemoveAt(index);
-            SaveTLKList();
         }
 
         public static void moveTLKUp(int index)
@@ -77,7 +69,6 @@ namespace TransplanterLib
             TalkFile tlk = tlkList[index];
             tlkList.RemoveAt(index);
             tlkList.Insert(index - 1, tlk);
-            SaveTLKList();
         }
 
         public static void moveTLKDown(int index)
@@ -85,7 +76,6 @@ namespace TransplanterLib
             TalkFile tlk = tlkList[index];
             tlkList.RemoveAt(index);
             tlkList.Insert(index + 1, tlk);
-            SaveTLKList();
         }
     }
 }

@@ -204,7 +204,7 @@ namespace TransplanterLib
             public int indexValue { get { return BitConverter.ToInt32(header, 16); } set { Buffer.BlockCopy(BitConverter.GetBytes(value), 0, header, 16, sizeof(int)); } }
             public int idxArchtype { get { return BitConverter.ToInt32(header, 20); } set { Buffer.BlockCopy(BitConverter.GetBytes(value), 0, header, 20, sizeof(int)); } }
             public long ObjectFlags { get { return BitConverter.ToInt64(header, 24); } set { Buffer.BlockCopy(BitConverter.GetBytes(value), 0, header, 24, sizeof(long)); } }
-            public string ClassParentWrapped { get { int val = idxClassParent; if (val < 0) return "(Import " + ((val * -1) - 1) + " " + pccRef.Names[pccRef.Imports[val * -1 - 1].idxObjectName] + ")"; else if (val > 0) return "[Export " + (val - 1) + " " + pccRef.Names[pccRef.Exports[val].idxObjectName] + "]"; else return "Class"; } }
+            public string ClassParentWrapped { get { int val = idxClassParent; if (val < 0) return "(Import " + ((val * -1) - 1) + " " + pccRef.Names[pccRef.Imports[val * -1 - 1].idxObjectName] + ")"; else if (val > 0) return "[Export " + (val - 1) + " " + pccRef.Names[pccRef.Exports[val-1].idxObjectName] + "]"; else return "Class"; } }
             public string ObjectName { get { return pccRef.Names[idxObjectName]; } }
             public string ClassName { get { int val = idxClass; if (val != 0) return pccRef.Names[pccRef.getEntry(val).idxObjectName]; else return "Class"; } }
             public string ClassParent { get { int val = idxClassParent; if (val != 0) return pccRef.Names[pccRef.getEntry(val).idxObjectName]; else return "Class"; } }

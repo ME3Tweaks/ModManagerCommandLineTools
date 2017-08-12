@@ -254,7 +254,9 @@ namespace TransplanterLib
             for (int i = 0; i < numExports; i++)
             {
                 PCCObject.ExportEntry exp = pcc.Exports[i];
-
+#if DEBUG
+                Console.WriteLine(exp.PackageFullName + "." + exp.ObjectName);
+#endif
                 if (exp.ClassName == "GFxMovieInfo")
                 {
                     string packobjname = exp.PackageFullName + "." + exp.ObjectName;
