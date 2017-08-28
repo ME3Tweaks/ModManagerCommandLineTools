@@ -224,7 +224,7 @@ namespace TransplanterLib
                                         {
                                             if (pcc.Imports.Count > value)
                                             {
-                                                s += pcc.Imports[value].ObjectName + " [IMPORT " + value + "]";
+                                                s += pcc.Imports[value].PackageFullName + "." + pcc.Imports[value].ObjectName + " [IMPORT " + value + "]";
                                             }
                                             else
                                             {
@@ -235,7 +235,7 @@ namespace TransplanterLib
                                         {
                                             if (pcc.Exports.Count > value)
                                             {
-                                                s += pcc.Exports[value].ObjectName + " [EXPORT " + value + "]";
+                                                s += pcc.Exports[value].PackageFullName+"."+pcc.Exports[value].ObjectName + " [EXPORT " + value + "]";
                                             }
                                             else
                                             {

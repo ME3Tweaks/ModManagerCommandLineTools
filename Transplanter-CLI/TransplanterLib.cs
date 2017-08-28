@@ -863,7 +863,7 @@ namespace TransplanterLib
                     UnrealObjectInfo.loadfromJSON();
                 }
                 StreamWriter stringoutput = StreamWriter.Null;
-                if (imports || exports ||  data || scripts ||coalesced ||names ||properties ||pathfindingmesh)
+                if (imports || exports || data || scripts || coalesced || names || properties || pathfindingmesh)
                 {
                     //dumps data.
                     string savepath = outfolder + Path.GetFileNameWithoutExtension(file) + ".txt";
@@ -976,7 +976,14 @@ namespace TransplanterLib
 
                                 if (exports && exports || isCoalesced && coalesced || isScript && scripts || isPathfindingNode && pathfindingmesh)
                                 {
-                                    stringoutput.WriteLine(exp.PackageFullName + "." + exp.ObjectName + "(" + exp.ClassName + ") (Superclass: " + exp.ClassParentWrapped + ") (Data Offset: 0x " + exp.DataOffset.ToString("X4") + ")");
+                                    stringoutput.Write(exp.PackageFullName + "." + exp.ObjectName + "(" + exp.ClassName + ")");
+                                    int ival = exp.indexValue;
+                                    if (ival > 0)
+                                    {
+                                        stringoutput.Write("(Index: " + ival + ") ");
+
+                                    }
+                                    stringoutput.WriteLine("(Superclass: " + exp.ClassParentWrapped + ") (Data Offset: 0x " + exp.DataOffset.ToString("X4") + ")");
                                 }
 
                                 if (isEnum)
@@ -1034,6 +1041,71 @@ namespace TransplanterLib
                         stringoutput.WriteLine("--End of Names");
 
                     }
+                }
+
+                if (properties)
+                {
+                    //Resolve LevelStreamingKismet references
+                    string savepath = outfolder + Path.GetFileNameWithoutExtension(file) + ".txt";
+                    string output = File.ReadAllText(savepath);
+                    string[] lines = output.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
+
+                    int parsingLine = 0;
+                    string streamingline = "LevelStreamingKismet [EXPORT";
+                    string kismetprefix = "LevelStreamingKismet(LevelStreamingKismet)";
+                    Dictionary<int, int> streamingLines = new Dictionary<int, int>(); //Maps string line # to export #s
+                    Dictionary<int, string> lskPackageName = new Dictionary<int, string>();
+                    //string streamingline = "LevelStreamingKismet[EXPORT";
+                    string packagenameprefix = "Name: \"PackageName\" Type: \"NameProperty\" Size: 8 Value: \"";
+                    foreach (string line in lines)
+                    {
+
+                        int exportnumstart = line.IndexOf(streamingline);
+                        if (exportnumstart > 0)
+                        {
+                            exportnumstart += streamingline.Length;
+                            string truncstr = line.Substring(exportnumstart);
+                            int exportnumend = truncstr.IndexOf("]");
+                            string exportidstr = truncstr.Substring(0, exportnumend);
+                            int export = int.Parse(exportidstr);
+                            export++;
+                            streamingLines[parsingLine] = export;
+                            parsingLine++;
+                            continue;
+                        }
+
+                        if (line.Contains(kismetprefix))
+                        {
+                            //Get Export #
+                            string exportStr = line.Substring(1); //Remove #
+                            exportStr = exportStr.Substring(0, exportStr.IndexOf(" "));
+                            int exportNum = int.Parse(exportStr);
+                            //Get PackageName
+                            string packagenamline = lines[parsingLine + 3];
+                            if (packagenamline.Contains("PackageName"))
+                            {
+                                int prefixindex = packagenamline.IndexOf(packagenameprefix);
+                                prefixindex += packagenameprefix.Length;
+                                packagenamline = packagenamline.Substring(prefixindex);
+                                int endofpackagename = packagenamline.IndexOf("\"");
+                                string packagename = packagenamline.Substring(0, endofpackagename);
+                                lskPackageName[exportNum] = packagename;
+                            }
+                            parsingLine++;
+                            continue;
+                        }
+                        parsingLine++;
+                    }
+
+                    //Updates lines.
+                    foreach (KeyValuePair<int, int> entry in streamingLines)
+                    {
+                        lines[entry.Key] += " - "+lskPackageName[entry.Value];
+                        Console.WriteLine(lines[entry.Key]);
+
+                        // do something with entry.Value or entry.Key
+                    }
+                    File.WriteAllLines(savepath, lines, Encoding.UTF8);
                 }
             }
             //catch (Exception e)
