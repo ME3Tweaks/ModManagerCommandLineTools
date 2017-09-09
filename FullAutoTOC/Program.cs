@@ -199,6 +199,7 @@ namespace FullAutoTOC
             Console.WriteLine("=====Generating TOC Files=====");
             Parallel.ForEach(folders, (currentfolder) =>
             {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 // The more computational work you do here, the greater 
                 // the speedup compared to a sequential foreach loop.
                 string foldername = Path.GetFileName(Path.GetDirectoryName(currentfolder));
@@ -219,21 +220,23 @@ namespace FullAutoTOC
                                 //AutoTOC it - SFAR is not unpacked
                                 DLCPackage dlc = new DLCPackage(sfar);
                                 dlc.UpdateTOCbin();
-                                Console.WriteLine(foldername + " - Ran SFAR TOC");
+                                watch.Stop();
+                                var elapsedMs = watch.ElapsedMilliseconds;
+                                Console.WriteLine(foldername + " - Ran SFAR TOC, took "+ elapsedMs + "ms");
                             } else
                             {
                                 //AutoTOC it - SFAR is unpacked
                                 CreateUnpackedTOC(currentfolder);
-                                Console.WriteLine(foldername + " - Ran Unpacked TOC");
+                                watch.Stop();
+                                var elapsedMs = watch.ElapsedMilliseconds;
+                                Console.WriteLine(foldername + " - Ran Unpacked TOC, took " + elapsedMs + "ms");
                             }
                         }
                         else
                         {
                             //We're good
                             //Console.WriteLine(foldername + ", - SFAR TOC - Unmodified");
-
                         }
-
                     }
 
                 }
@@ -242,7 +245,8 @@ namespace FullAutoTOC
                     //TOC it unpacked style
                     // Console.WriteLine(foldername + ", - UNPACKED TOC");
                     CreateUnpackedTOC(currentfolder);
-                    Console.WriteLine(foldername + " - Ran Unpacked TOC");
+                    var elapsedMs = watch.ElapsedMilliseconds;
+                    Console.WriteLine(foldername + " - Ran Unpacked TOC, took " + elapsedMs + "ms");
                 }
             });
             //TOC TestPatch
@@ -255,10 +259,12 @@ namespace FullAutoTOC
                 if (installedsize != sfarsizemap["DLC_TestPatch"] && installedsize != TESTPATCH_16_SIZE)
                 {
                     {
+                        var watch = System.Diagnostics.Stopwatch.StartNew();
                         //AutoTOC it
                         DLCPackage dlc = new DLCPackage(testpatchpath);
                         dlc.UpdateTOCbin();
-                        Console.WriteLine("TESTPATCH - Ran SFAR TOC");
+                        var elapsedMs = watch.ElapsedMilliseconds;
+                        Console.WriteLine("TESTPATCH - Ran SFAR TOC, took " + elapsedMs + "ms");
                     }
                 } else
                 {
