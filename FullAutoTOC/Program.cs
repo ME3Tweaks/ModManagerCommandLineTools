@@ -439,7 +439,7 @@ namespace FullAutoTOC
 
 #if DEBUG
             Console.WriteLine("Press any key to continue");
-            Console.ReadKey();
+            //Console.ReadKey();
 #endif
 
             Environment.Exit(code);

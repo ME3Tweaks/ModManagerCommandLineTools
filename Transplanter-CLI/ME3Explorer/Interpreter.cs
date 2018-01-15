@@ -835,6 +835,15 @@ namespace TransplanterLib
                     continue;
                 }
                 p.name = BitConverter.ToInt32(memory, readerpos);
+
+                if (readerpos == 4 && pcc.isName(p.name) && pcc.getNameEntry(p.name) == className)
+                {
+                    //It's a primitive component header
+                    //Debug.WriteLine("Primitive Header " + pcc.Names[p.name]);
+                    readerpos += 12;
+                    continue;
+                }
+
                 if (!pcc.isName(p.name))
                     run = false;
                 else

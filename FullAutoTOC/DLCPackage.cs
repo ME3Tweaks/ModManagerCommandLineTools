@@ -767,7 +767,6 @@ namespace FullAutoTOC
                     if (Files[j].FileName.Replace('/', '\\').Contains(e.name))
                         f = j;
 
-                ////////////////////////////// KFREON TEMPORARY STUFF WV :)
                 if (f == -1)
                 {
                     List<string> parts = new List<string>(this.FileName.Split('\\'));
@@ -786,7 +785,7 @@ namespace FullAutoTOC
                     }
                     //else
                     //    DebugOutput.PrintLn((count++) + " : Entry not found " + e.name);
-                }  /////////////////////////////// END KFREON BLATHER
+                }
                 else
                 {
                     //if (Files[f].UncompressedSize == e.size)
@@ -806,7 +805,7 @@ namespace FullAutoTOC
             {
                 //DebugOutput.PrintLn("Reopening SFAR...");
                 Load(FileName);
-                //DebugOutput.PrintLn("Rebuild...");
+                Console.WriteLine("Rebuilding SFAR");
                 ReBuild();
             }
             return TOC.Entries;
