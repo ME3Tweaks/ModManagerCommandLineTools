@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyCompany("ME3Tweaks")]
-[assembly: AssemblyCopyright("Copyright © ME3Tweaks 2017")]
+[assembly: AssemblyCopyright("Copyright © ME3Tweaks 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.0.0.27")]
-[assembly: AssemblyFileVersion("1.0.0.27")]
+[assembly: AssemblyVersion("1.0.0.28")]
+[assembly: AssemblyFileVersion("1.0.0.28")]
 

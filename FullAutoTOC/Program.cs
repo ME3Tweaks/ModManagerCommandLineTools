@@ -70,7 +70,7 @@ namespace FullAutoTOC
                     {
                         if (!Directory.Exists(folder))
                         {
-                            Console.WriteLine("One of the specified folders to make a TOC for does not exist: " +folder);
+                            Console.WriteLine("One of the specified folders to make a TOC for does not exist: " + folder);
                             EndProgram(1);
                         }
                     }
@@ -79,7 +79,7 @@ namespace FullAutoTOC
                     {
                         CreateUnpackedTOC(folder);
                     });
-                EndProgram(0);
+                    EndProgram(0);
                 }
 
                 if (options.TOCFile != null)
@@ -97,7 +97,7 @@ namespace FullAutoTOC
 
                         foreach (TOCBinFile.Entry e in tbf.Entries)
                         {
-                            Console.WriteLine(index+"\t0x"+e.offset.ToString("X6") + "\t" + e.size + "\t" + e.name);
+                            Console.WriteLine(index + "\t0x" + e.offset.ToString("X6") + "\t" + e.size + "\t" + e.name);
                             index++;
                         }
                         EndProgram(0);
@@ -120,14 +120,15 @@ namespace FullAutoTOC
                         {
                             int size = Convert.ToInt32(options.TOCUpdates[i]);
                             updates.Add(path, size);
-                        } catch (FormatException e)
+                        }
+                        catch (FormatException e)
                         {
                             Console.WriteLine("ERROR READING ARGUMENT (" + options.TOCUpdates[i] + ") - cannot parse integer for size update.");
                             EndProgram(1);
                         }
                     }
 
-                    
+
 
                     //ITERATE OVER EACH ENTRY, USE LINQ TO FIND INDEX, UPDATE ENTRY.
                     bool needssaving = false;
@@ -152,7 +153,7 @@ namespace FullAutoTOC
                                     break;
                                 }
                             }
-                            
+
                         }
                         if (!found)
                         {
@@ -162,7 +163,7 @@ namespace FullAutoTOC
                     }
                     if (needssaving)
                     {
-                        File.WriteAllBytes(options.TOCFile,tbf.Save().ToArray());
+                        File.WriteAllBytes(options.TOCFile, tbf.Save().ToArray());
                     }
 
                     //RunFullGameTOC(args[0]);
@@ -181,7 +182,7 @@ namespace FullAutoTOC
             }
             if (!Directory.Exists(gameDir))
             {
-                Console.WriteLine("ERROR: Specified game directory does not exist: "+gameDir);
+                Console.WriteLine("ERROR: Specified game directory does not exist: " + gameDir);
                 EndProgram(1);
             }
             string baseDir = Path.Combine(gameDir, @"BIOGame\");
@@ -222,8 +223,9 @@ namespace FullAutoTOC
                                 dlc.UpdateTOCbin();
                                 watch.Stop();
                                 var elapsedMs = watch.ElapsedMilliseconds;
-                                Console.WriteLine(foldername + " - Ran SFAR TOC, took "+ elapsedMs + "ms");
-                            } else
+                                Console.WriteLine(foldername + " - Ran SFAR TOC, took " + elapsedMs + "ms");
+                            }
+                            else
                             {
                                 //AutoTOC it - SFAR is unpacked
                                 CreateUnpackedTOC(currentfolder);
@@ -235,7 +237,7 @@ namespace FullAutoTOC
                         else
                         {
                             //We're good
-                            //Console.WriteLine(foldername + ", - SFAR TOC - Unmodified");
+                            Console.WriteLine(foldername + ", - Not TOC'd - DLC appears unmodified");
                         }
                     }
 
@@ -253,7 +255,7 @@ namespace FullAutoTOC
 
             if (File.Exists(testpatchpath))
             {
-                Console.WriteLine("TESTPATCH - Found TESTPATCH at "+testpatchpath);
+                Console.WriteLine("TESTPATCH - Found TESTPATCH at " + testpatchpath);
 
                 long installedsize = new FileInfo(testpatchpath).Length;
                 if (installedsize != sfarsizemap["DLC_TestPatch"] && installedsize != TESTPATCH_16_SIZE)
@@ -266,7 +268,8 @@ namespace FullAutoTOC
                         var elapsedMs = watch.ElapsedMilliseconds;
                         Console.WriteLine("TESTPATCH - Ran SFAR TOC, took " + elapsedMs + "ms");
                     }
-                } else
+                }
+                else
                 {
                     Console.WriteLine("TESTPATCH does not need TOC'd.");
 
@@ -329,40 +332,40 @@ namespace FullAutoTOC
 
         static void CreateUnpackedTOC(string basepath, string tocFile, string[] files)
         {
-            FileStream fs = new FileStream(tocFile, FileMode.Create, FileAccess.Write);
-            fs.Write(BitConverter.GetBytes((int)0x3AB70C13), 0, 4);
-            fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
-            fs.Write(BitConverter.GetBytes((int)0x1), 0, 4);
-            fs.Write(BitConverter.GetBytes((int)0x8), 0, 4);
-            fs.Write(BitConverter.GetBytes((int)files.Length), 0, 4);
-            for (int i = 0; i < files.Length; i++)
+            using (FileStream fs = new FileStream(tocFile, FileMode.Create, FileAccess.Write))
             {
-                string file = files[i];
-                if (i == files.Length - 1)//Entry Size
-                    fs.Write(new byte[2], 0, 2);
-                else
-                    fs.Write(BitConverter.GetBytes((ushort)(0x1D + file.Length)), 0, 2);
-                fs.Write(BitConverter.GetBytes((ushort)0), 0, 2);//Flags
-                if (Path.GetFileName(file).ToLower() != "pcconsoletoc.bin")
+                fs.Write(BitConverter.GetBytes((int)0x3AB70C13), 0, 4);
+                fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
+                fs.Write(BitConverter.GetBytes((int)0x1), 0, 4);
+                fs.Write(BitConverter.GetBytes((int)0x8), 0, 4);
+                fs.Write(BitConverter.GetBytes((int)files.Length), 0, 4);
+                for (int i = 0; i < files.Length; i++)
                 {
-                    FileStream fs2 = new FileStream(basepath + file, FileMode.Open, FileAccess.Read);
-                    fs.Write(BitConverter.GetBytes((int)fs2.Length), 0, 4);//Filesize
-                    fs2.Close();
+                    string file = files[i];
+                    if (i == files.Length - 1)//Entry Size
+                        fs.Write(new byte[2], 0, 2);
+                    else
+                        fs.Write(BitConverter.GetBytes((ushort)(0x1D + file.Length)), 0, 2);
+                    fs.Write(BitConverter.GetBytes((ushort)0), 0, 2);//Flags
+                    if (Path.GetFileName(file).ToLower() != "pcconsoletoc.bin")
+                    {
+                        uint size = (uint)new FileInfo(basepath + file).Length;
+                        fs.Write(BitConverter.GetBytes(size), 0, 4);//Filesize
+                    }
+                    else
+                    {
+                        fs.Write(BitConverter.GetBytes((int)0), 0, 4);//Filesize
+                    }
+                    fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);//SHA1
+                    fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
+                    fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
+                    fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
+                    fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
+                    foreach (char c in file)
+                        fs.WriteByte((byte)c);
+                    fs.WriteByte(0);
                 }
-                else
-                {
-                    fs.Write(BitConverter.GetBytes((int)0), 0, 4);//Filesize
-                }
-                fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);//SHA1
-                fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
-                fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
-                fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
-                fs.Write(BitConverter.GetBytes((int)0x0), 0, 4);
-                foreach (char c in file)
-                    fs.WriteByte((byte)c);
-                fs.WriteByte(0);
             }
-            fs.Close();
         }
 
         static List<string> GetFiles(string basefolder)

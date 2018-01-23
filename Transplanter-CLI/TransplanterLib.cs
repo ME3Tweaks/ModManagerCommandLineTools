@@ -293,6 +293,8 @@ namespace TransplanterLib
         public static Boolean doesPCCContainGUIs(string pccfilepath, Boolean anygui)
         {
             string[] whitelist = {
+                "gui_designui_bar.DesignUI_HorzBar",
+                "GUI_DesignUI_Timer.DesignUI_Timer",
                 "GUI_SF_AreaMap.ME2_AreaMap",
                 "GUI_SF_BlackScreen.BlackScreen",
                 "GUI_SF_ConversationWheel.ConversationWheel",
@@ -327,6 +329,7 @@ namespace TransplanterLib
                 "GUI_SF_Subtitles.Subtitles",
                 "GUI_SF_Training.Training",
                 "GUI_SF_WarAssets.WarAssets",
+                "GUI_SF_WarAssetsEGM.WarAssets",
                 "GUI_SF_Xbox_ControllerIcons.Xbox_ControllerIcons"
             };
             PCCObject pcc = new PCCObject(pccfilepath);
@@ -340,7 +343,7 @@ namespace TransplanterLib
                         return true;
                     }
                     string fullname = export.PackageName + "." + export.ObjectName;
-                    if (Array.Exists(whitelist, element => element == fullname))
+                    if (Array.Exists(whitelist, element => element.Equals(fullname,StringComparison.OrdinalIgnoreCase)))
                     {
                         Console.WriteLine("PCC contains a whitelisted GUI export.");
                         return true;
@@ -365,7 +368,7 @@ namespace TransplanterLib
             {
                 string packobjname = Path.GetFileNameWithoutExtension(gfxfile);
                 writeVerboseLine("SWF in source folder: " + packobjname);
-                packobjnames.Add(packobjname);
+                packobjnames.Add(packobjname.ToLower());
             }
 
             if (gfxfiles.Length > 0)
@@ -386,11 +389,11 @@ namespace TransplanterLib
 
                     if (exp.ClassName == "GFxMovieInfo")
                     {
-                        string packobjname = exp.PackageFullName + "." + exp.ObjectName;
-                        int index = packobjnames.IndexOf(packobjname);
+                        string packobjname = exp.PackageFullName;
+                        int index = packobjnames.IndexOf(packobjname.ToLower());
                         if (index > -1)
                         {
-                            writeVerboseLine("#" + i + " Replacing " + exp.PackageFullName + "." + exp.ObjectName);
+                            writeVerboseLine("#" + i + " Replacing " + exp.PackageFullName);
                             replace_swf_file(exp, gfxfiles[index]);
                             numReplaced++;
                             replaced = true;
@@ -434,7 +437,7 @@ namespace TransplanterLib
             {
                 string packobjname = Path.GetFileNameWithoutExtension(gfxfile);
                 writeVerboseLine("SWF in source folder: " + packobjname);
-                packobjnames.Add(packobjname);
+                packobjnames.Add(packobjname.ToLower());
             }
 
             if (gfxfiles.Length > 0)
@@ -451,16 +454,23 @@ namespace TransplanterLib
                 int numExports = pcc.exportsTable.Count;
                 for (int i = 0; i < numExports; i++)
                 {
+                    //pcc.
+                    if (i == 405)
+                    {
+                        Debug.WriteLine("t");
+                    }
                     Package.ExportEntry exp = pcc.exportsTable[i];
                     if (pcc.getClassName(exp.classId) == "GFxMovieInfo")
                     {
-                        //pcc.
-
-                        string packobjname = pcc.resolvePackagePath((int)exp.id + 1);
-                        int index = packobjnames.IndexOf(packobjname);
+                        
+                        string packobjname = pcc.resolvePackagePath((int)exp.id +1 );
+                        int index = packobjnames.IndexOf(packobjname.ToLower());
                         if (index > -1)
                         {
-                            Console.WriteLine("#" + i + " Replacing " + packobjname + "." + exp.objectName);
+                            string logstr = "#" + i + " Replacing " + packobjname;
+                            Console.WriteLine(packobjname);
+                            Console.WriteLine(exp.objectName);
+                            Console.WriteLine(logstr);
                             pcc.setExportData((int)exp.id, getReplacedSWFExportData(pcc.getExportData((int)exp.id), gfxfiles[index]));
                             //replace_swf_file(exp, gfxfiles[index]);
                             numReplaced++;

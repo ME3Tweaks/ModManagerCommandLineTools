@@ -406,7 +406,7 @@ namespace MassEffectModder
                     s += ".";
                 s += exportsTable[id - 1].objectName;
             }
-            if (id < 0 && -id < importsTable.Count)
+            else if (id < 0 && -id < importsTable.Count)
             {
                 s += resolvePackagePath(importsTable[-id - 1].linkId);
                 if (s != "")

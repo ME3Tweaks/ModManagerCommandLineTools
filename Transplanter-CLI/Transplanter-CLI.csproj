@@ -146,9 +146,7 @@ if $(Platform)==x86 copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(Solutio
 
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll" /y
-if $(Platform)==x64 copy /y "$(SolutionDir)dlls\zlibwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\zlibwrapper.dll" /y
-
-copy /y "$(TargetPath)" "C:\Users\Michael\workspace\modmanager3\data\tools\ModManagerCommandLine\$(Platform)\$(TargetFileName)"</PostBuildEvent>
+if $(Platform)==x64 copy /y "$(SolutionDir)dlls\zlibwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\zlibwrapper.dll" /y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
