@@ -468,9 +468,6 @@ namespace TransplanterLib
                         if (index > -1)
                         {
                             string logstr = "#" + i + " Replacing " + packobjname;
-                            Console.WriteLine(packobjname);
-                            Console.WriteLine(exp.objectName);
-                            Console.WriteLine(logstr);
                             pcc.setExportData((int)exp.id, getReplacedSWFExportData(pcc.getExportData((int)exp.id), gfxfiles[index]));
                             //replace_swf_file(exp, gfxfiles[index]);
                             numReplaced++;
