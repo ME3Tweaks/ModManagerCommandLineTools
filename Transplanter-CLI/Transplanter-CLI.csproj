@@ -141,12 +141,13 @@
     <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)"
 copy /y "$(SolutionDir)dlls\elevate.exe"  "$(SolutionDir)Output\$(Platform)\elevate.exe" /y
 
-if $(Platform)==x86 copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
-if $(Platform)==x86 copy /y "$(SolutionDir)dlls\sevenzipwrapper.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll" /y
-
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
 if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll" /y
-if $(Platform)==x64 copy /y "$(SolutionDir)dlls\zlibwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\zlibwrapper.dll" /y</PostBuildEvent>
+if $(Platform)==x64 copy /y "$(SolutionDir)dlls\zlibwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\zlibwrapper.dll" /y
+
+if $(Platform)==x64 copy /y "$(SolutionDir)dlls\lzo2wrapper.dll"  "$(TargetDir)lzo2wrapper.dll" /y
+if $(Platform)==x64 copy /y "$(SolutionDir)dlls\lzo2wrapper.dll"  "$(SolutionDir)Output\$(Platform)\lzo2wrapper.dll" /y
+if $(Platform)==x64 copy /y "$(SolutionDir)dlls\lzo2wrapper.dll"  "$(SolutionDir)Output\$(Platform)\lzo2wrapper.dll" /y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
