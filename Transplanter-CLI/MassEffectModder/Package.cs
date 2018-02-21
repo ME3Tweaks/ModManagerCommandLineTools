@@ -1,7 +1,7 @@
 /*
  * MassEffectModder
  *
- * Copyright (C) 2014-2017 Pawel Kolodziejski <aquadran at users.sourceforge.net>
+ * Copyright (C) 2014-2018 Pawel Kolodziejski <aquadran at users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -56,6 +56,8 @@ namespace MassEffectModder
         const int packageHeaderDependsOffsetTableOffset = 24;
         const int packageHeaderGuidsOffsetTableOffset = 28;
         const int packageHeaderGuidsCountTableOffset = 36;
+        bool hasMEMMarker = false;
+        public const string MEMendFileMarker = "ThisIsMEMEndOfFileMarker";
 
         public enum CompressionType
         {
@@ -382,7 +384,7 @@ namespace MassEffectModder
         {
             if (id > 0 && id < exportsTable.Count)
                 return exportsTable[id - 1].objectName;
-            if (id < 0 && -id < importsTable.Count)
+            else if (id < 0 && -id < importsTable.Count)
                 return importsTable[-id - 1].objectName;
             return "Class";
         }
@@ -391,7 +393,7 @@ namespace MassEffectModder
         {
             if (id > 0 && id < exportsTable.Count)
                 return exportsTable[id - 1].objectNameId;
-            if (id < 0 && -id < importsTable.Count)
+            else if (id < 0 && -id < importsTable.Count)
                 return importsTable[-id - 1].objectNameId;
             return 0;
         }
@@ -531,6 +533,10 @@ namespace MassEffectModder
             else
                 loadExports(packageFile);
 
+            packageFile.SeekEnd();
+            packageFile.Seek(-Package.MEMendFileMarker.Length, SeekOrigin.Current);
+            string marker = packageFile.ReadStringASCII(Package.MEMendFileMarker.Length);
+            hasMEMMarker = marker != Package.MEMendFileMarker;
             //loadImportsNames(); // not used by tool
             //loadExportsNames(); // not used by tool
         }
@@ -597,27 +603,28 @@ namespace MassEffectModder
 
                         if (compressionType == CompressionType.LZO)
                         {
-                            for (int b = 0; b < blocks.Count; b++)
+                            Parallel.For(0, blocks.Count, b =>
                             {
                                 uint dstLen;
                                 ChunkBlock block = blocks[b];
                                 dstLen = LZO2Helper.LZO2.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
                                 if (dstLen != block.uncomprSize)
                                     throw new Exception("Decompressed data size not expected!");
-                            }
+                            });
                         }
-                        else
+                        else if (compressionType == CompressionType.Zlib)
                         {
                             Parallel.For(0, blocks.Count, b =>
                             {
                                 uint dstLen = 0;
                                 ChunkBlock block = blocks[b];
-                                if (compressionType == CompressionType.Zlib)
-                                    dstLen = ZlibHelper.Zlib.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
+                                dstLen = ZlibHelper.Zlib.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
                                 if (dstLen != block.uncomprSize)
                                     throw new Exception("Decompressed data size not expected!");
                             });
                         }
+                        else
+                            throw new Exception("Compression type not expected!");
 
                         for (int b = 0; b < blocks.Count; b++)
                         {
@@ -717,8 +724,6 @@ namespace MassEffectModder
         {
             namesTable = new List<NameEntry>();
             input.JumpTo(namesOffset);
-            //Console.WriteLine("Is Compressed: "+compressed);
-            //Console.WriteLine("Names Offset: 0x" + namesOffset.ToString("X8"));
             for (int i = 0; i < namesCount; i++)
             {
                 NameEntry entry = new NameEntry();
@@ -757,7 +762,7 @@ namespace MassEffectModder
                     entry.flags = input.ReadUInt64();
                 if (version == packageFileVersionME2)
                     entry.flags = input.ReadUInt32();
-                //Console.WriteLine(entry.name);
+
                 namesTable.Add(entry);
             }
             namesTableEnd = (uint)input.Position;
@@ -998,16 +1003,25 @@ namespace MassEffectModder
             }
         }
 
-        public bool SaveToFile(bool forceZlib = false, bool forceCompressed = false, bool forceDecompressed = false, string filename = null)
+        public bool SaveToFile(bool forceZlib = false, bool forceCompressed = false,
+            bool forceDecompressed = false, string filename = null)
         {
-            if (forceZlib && compressionType != CompressionType.Zlib)
+            if (forceCompressed && packageFileVersion == packageFileVersionME1)
+                forceCompressed = false;
+
+            if (forceZlib && packageFileVersion == packageFileVersionME2 &&
+                    compressionType != CompressionType.Zlib)
+                modified = true;
+
+            // WA Allow force back to LZO2
+            if (forceZlib && packageFileVersion == packageFileVersionME1)
                 modified = true;
 
             if (packageFile.Length == 0 || !modified && !forceDecompressed && !forceCompressed)
                 return false;
 
             if (forceCompressed && forceDecompressed)
-                throw new Exception("force de/compression can be both enabled!");
+                throw new Exception("force de/compression can't be both enabled!");
 
             MemoryStream tempOutput = new MemoryStream();
 
@@ -1106,7 +1120,7 @@ namespace MassEffectModder
                 {
                     if (compressionType == CompressionType.None)
                     {
-                        if (packageFileVersion == packageFileVersionME3)
+                        if (packageFileVersion == packageFileVersionME3 || forceZlib)
                             compressionType = CompressionType.Zlib;
                         else
                             compressionType = CompressionType.LZO;
@@ -1114,7 +1128,11 @@ namespace MassEffectModder
                     compressed = true;
                 }
                 else
+                {
+                    if (!modified)
+                        return false;
                     forceCompressed = false;
+                }
             }
 
             if (namesOffset > sortedExports[0].dataOffset ||
@@ -1174,6 +1192,9 @@ namespace MassEffectModder
 
                     if (forceZlib)
                         compressionType = CompressionType.Zlib; // override compression type to Zlib
+                    // WA Force back to LZO2 compression
+                    if (packageFileVersion == packageFileVersionME1 && compressionType == CompressionType.Zlib)
+                        compressionType = CompressionType.LZO;
                     fs.Write(packageHeader, 0, packageHeader.Length);
                     fs.WriteUInt32((uint)compressionType);
                     fs.WriteUInt32((uint)chunks.Count);
@@ -1209,7 +1230,7 @@ namespace MassEffectModder
 
                         if (compressionType == CompressionType.LZO)
                         {
-                            for (int b = 0; b < newNumBlocks; b++)
+                            Parallel.For(0, chunk.blocks.Count, b =>
                             {
                                 ChunkBlock block = chunk.blocks[b];
                                 block.compressedBuffer = LZO2Helper.LZO2.Compress(block.uncompressedBuffer);
@@ -1217,23 +1238,22 @@ namespace MassEffectModder
                                     throw new Exception("Compression failed!");
                                 block.comprSize = (uint)block.compressedBuffer.Length;
                                 chunk.blocks[b] = block;
-                            }
+                            });
                         }
-                        else
+                        else if (compressionType == CompressionType.Zlib)
                         {
                             Parallel.For(0, chunk.blocks.Count, b =>
                             {
                                 ChunkBlock block = chunk.blocks[b];
-                                if (compressionType == CompressionType.Zlib)
-                                    block.compressedBuffer = ZlibHelper.Zlib.Compress(block.uncompressedBuffer);
-                                else
-                                    throw new Exception("Compression type not expected!");
+                                block.compressedBuffer = ZlibHelper.Zlib.Compress(block.uncompressedBuffer);
                                 if (block.compressedBuffer.Length == 0)
                                     throw new Exception("Compression failed!");
                                 block.comprSize = (uint)block.compressedBuffer.Length;
                                 chunk.blocks[b] = block;
                             });
                         }
+                        else
+                            throw new Exception("Compression type not expected!");
 
                         for (int b = 0; b < newNumBlocks; b++)
                         {
@@ -1272,6 +1292,12 @@ namespace MassEffectModder
                     chunks.Clear();
                     chunks = null;
                 }
+
+                if (hasMEMMarker)
+                {
+                    fs.SeekEnd();
+                    fs.WriteStringASCII(MEMendFileMarker);
+                }
             }
 
             tempOutput.Close();
@@ -1299,7 +1325,7 @@ namespace MassEffectModder
             }
             packageFile.Close();
             packageFile.Dispose();
-            if (!memoryMode && Directory.Exists(packagePath + "-exports"))
+            if (!memoryMode && modified && Directory.Exists(packagePath + "-exports"))
                 Directory.Delete(packagePath + "-exports", true);
         }
     }
