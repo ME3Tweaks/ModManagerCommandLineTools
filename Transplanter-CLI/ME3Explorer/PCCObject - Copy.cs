@@ -352,8 +352,8 @@ namespace TransplanterLib
                 Exports = new List<ExportEntry>();
 
                 pccStream.Read(header, 0, header.Length);
-                if (magic !=  0x9E2A83C1&&
-                    magic.Swap() !=  0x9E2A83C1)
+                if (magic != 0x9E2A83C1 &&
+                    magic.Swap() != 0x9E2A83C1)
                 {
                     throw new FormatException("not a pcc file");
                 }
@@ -412,7 +412,7 @@ namespace TransplanterLib
                     // decompress first block that holds infos about names, imports and exports
                     pccStream.Seek(blockList[0].cprOffset, SeekOrigin.Begin);
                     byte[] uncBlock = new byte[blockList[0].uncSize];
-                    ZlibHelper.Zlib.Decompress(pccStream, (uint)blockList[0].cprSize, uncBlock);
+                    new ZlibHelper.Zlib().Decompress(pccStream, (uint)blockList[0].cprSize, uncBlock);
                     //byte[] uncBlock = ZBlock.Decompress(pccStream, blockList[0].cprSize);
 
                     // write decompressed block inside temporary stream
@@ -514,7 +514,7 @@ namespace TransplanterLib
                 using (FileStream pccStream = File.OpenRead(pccFileName))
                 {
                     pccStream.Seek(selected.cprOffset, SeekOrigin.Begin);
-                    ZlibHelper.Zlib.Decompress(pccStream, (uint)selected.cprSize, uncBlock);
+                    new ZlibHelper.Zlib().Decompress(pccStream, (uint)selected.cprSize, uncBlock);
                     //byte[] uncBlock = ZBlock.Decompress(pccStream, blockList[0].cprSize);
 
                     // the selected block has been read

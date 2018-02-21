@@ -127,7 +127,7 @@ namespace TransplanterLib
                     long curPos = output.Position;
                     output.WriteFromStream(input, nameOffset - curPos);
                 }
-
+                ZlibHelper.Zlib z = new ZlibHelper.Zlib();
                 for (int i = 0; i < blockCount; i++)
                 {
                     input.Seek(headBlockOff, SeekOrigin.Begin);
@@ -141,7 +141,7 @@ namespace TransplanterLib
                     input.Seek(compressedOffset, SeekOrigin.Begin);
                     input.Read(buff, 0, buff.Length);
                     byte[] temp = new byte[uncompressedSize];
-                    ZlibHelper.Zlib.Decompress(buff, compressedSize, temp);
+                    z.Decompress(buff, compressedSize, temp);
                     output.Seek(uncompressedOffset, SeekOrigin.Begin);
                     output.Write(temp, 0, temp.Length);
                 }
@@ -309,6 +309,7 @@ namespace TransplanterLib
 
             uncompressedPcc.Seek(namesOffset, SeekOrigin.Begin);
             //divide the block in segments
+            ZlibHelper.Zlib z = new ZlibHelper.Zlib();
             for (int i = 0; i < blockSizes.Count; i++)
             {
                 int currentUncBlockSize = blockSizes[i];
@@ -320,7 +321,7 @@ namespace TransplanterLib
 
                 byte[] inputBlock = new byte[currentUncBlockSize];
                 uncompressedPcc.Read(inputBlock, 0, (int)currentUncBlockSize);
-                byte[] compressedBlock = ZlibHelper.Zlib.Compress(inputBlock);
+                byte[] compressedBlock = z.Compress(inputBlock);
 
                 outputStream.WriteValueS32(compressedBlock.Length);
                 outOffsetBlockInfo = outputStream.Position;

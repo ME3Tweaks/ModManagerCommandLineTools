@@ -408,7 +408,7 @@ namespace MassEffectModder
                     s += ".";
                 s += exportsTable[id - 1].objectName;
             }
-            else if (id < 0 && -id < importsTable.Count)
+            if (id < 0 && -id < importsTable.Count)
             {
                 s += resolvePackagePath(importsTable[-id - 1].linkId);
                 if (s != "")
@@ -607,7 +607,7 @@ namespace MassEffectModder
                             {
                                 uint dstLen;
                                 ChunkBlock block = blocks[b];
-                                dstLen = LZO2Helper.LZO2.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
+                                dstLen = new LZO2Helper.LZO2().Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
                                 if (dstLen != block.uncomprSize)
                                     throw new Exception("Decompressed data size not expected!");
                             });
@@ -618,7 +618,8 @@ namespace MassEffectModder
                             {
                                 uint dstLen = 0;
                                 ChunkBlock block = blocks[b];
-                                dstLen = ZlibHelper.Zlib.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
+                                if (compressionType == CompressionType.Zlib)
+                                    dstLen = ZlibHelper.Zlib.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
                                 if (dstLen != block.uncomprSize)
                                     throw new Exception("Decompressed data size not expected!");
                             });
@@ -1017,6 +1018,10 @@ namespace MassEffectModder
             if (forceZlib && packageFileVersion == packageFileVersionME1)
                 modified = true;
 
+            // WA Allow force back to LZO2
+            if (forceZlib && packageFileVersion == packageFileVersionME1)
+                modified = true;
+
             if (packageFile.Length == 0 || !modified && !forceDecompressed && !forceCompressed)
                 return false;
 
@@ -1233,7 +1238,7 @@ namespace MassEffectModder
                             Parallel.For(0, chunk.blocks.Count, b =>
                             {
                                 ChunkBlock block = chunk.blocks[b];
-                                block.compressedBuffer = LZO2Helper.LZO2.Compress(block.uncompressedBuffer);
+                                block.compressedBuffer = new LZO2Helper.LZO2().Compress(block.uncompressedBuffer);
                                 if (block.compressedBuffer.Length == 0)
                                     throw new Exception("Compression failed!");
                                 block.comprSize = (uint)block.compressedBuffer.Length;
