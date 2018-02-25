@@ -619,7 +619,7 @@ namespace MassEffectModder
                                 uint dstLen = 0;
                                 ChunkBlock block = blocks[b];
                                 if (compressionType == CompressionType.Zlib)
-                                    dstLen = ZlibHelper.Zlib.Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
+                                    dstLen = new ZlibHelper.Zlib().Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
                                 if (dstLen != block.uncomprSize)
                                     throw new Exception("Decompressed data size not expected!");
                             });
@@ -1250,7 +1250,7 @@ namespace MassEffectModder
                             Parallel.For(0, chunk.blocks.Count, b =>
                             {
                                 ChunkBlock block = chunk.blocks[b];
-                                block.compressedBuffer = ZlibHelper.Zlib.Compress(block.uncompressedBuffer);
+                                block.compressedBuffer = new ZlibHelper.Zlib().Compress(block.uncompressedBuffer);
                                 if (block.compressedBuffer.Length == 0)
                                     throw new Exception("Compression failed!");
                                 block.comprSize = (uint)block.compressedBuffer.Length;
