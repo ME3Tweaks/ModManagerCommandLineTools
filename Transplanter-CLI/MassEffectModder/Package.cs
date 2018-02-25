@@ -536,7 +536,7 @@ namespace MassEffectModder
             packageFile.SeekEnd();
             packageFile.Seek(-Package.MEMendFileMarker.Length, SeekOrigin.Current);
             string marker = packageFile.ReadStringASCII(Package.MEMendFileMarker.Length);
-            hasMEMMarker = marker != Package.MEMendFileMarker;
+            hasMEMMarker = marker == Package.MEMendFileMarker;
             //loadImportsNames(); // not used by tool
             //loadExportsNames(); // not used by tool
         }
