@@ -307,6 +307,7 @@ namespace TransplanterLib
                 "GUI_SF_LoadSave.LoadSave",
                 "GUI_SF_LoadScreenToolTips.LoadScreenToolTips",
                 "GUI_SF_Mail.Mail",
+                "GUI_SF_HUDatlas.HUDatlas",
                 "GUI_SF_MainWheel.MainWheel",
                 "GUI_SF_Markers.Markers",
                 "GUI_SF_Markers.ObjectiveMarkers",
