@@ -93,9 +93,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)"
-copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(TargetDir)sevenzipwrapper.dll" /y
-</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == Release signtool sign /n "Michael Perez" /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "$(TargetPath)"
+copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)"
+copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(TargetDir)sevenzipwrapper.dll" /y</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

@@ -76,22 +76,21 @@ namespace SFARTools
                         Console.WriteLine("Specified SFAR file doesn't exist: " + options.SFARPath);
                         EndProgram(1);
                     }
-                    SFAR sfar = new SFAR(options.SFARPath);
+                    SFAR sfar = new SFAR();
                     Console.WriteLine("OutputPath: " + options.OutputPath);
                     if (options.ExtractList != null && options.ExtractList.Length > 0)
                     {
                         //Extract a list of files
-                        sfar.extractfiles(options.OutputPath, options.ExtractList, true);
-                        sfar.Dispose();
-
+                        sfar.extractfiles(options.SFARPath, options.OutputPath, options.ExtractList, true);
                     }
                     else
                     {
                         //extract the whole archive
-                        Console.WriteLine("Extracting archive: "+options.SFARPath+"...");
-                        sfar.extract(options.OutputPath, true, options.KeepArchiveIntact);
+                        int numFiles = SFAR.getNumberOfFiles(options.SFARPath);
+                        int currentProgress = 0;
+                        Console.WriteLine("Extracting archive: " + options.SFARPath + "... " + numFiles + " files");
+                        sfar.extract(options.SFARPath, options.OutputPath, false, ref currentProgress, numFiles, true, options.KeepArchiveIntact);
                     }
-
                 }
 
                 // Values are available here

@@ -56,6 +56,7 @@ namespace MassEffectModder
         const int packageHeaderDependsOffsetTableOffset = 24;
         const int packageHeaderGuidsOffsetTableOffset = 28;
         const int packageHeaderGuidsCountTableOffset = 36;
+        bool hasMEMMarker = false;
         public const string MEMendFileMarker = "ThisIsMEMEndOfFileMarker";
 
         public enum CompressionType
@@ -383,7 +384,7 @@ namespace MassEffectModder
         {
             if (id > 0 && id < exportsTable.Count)
                 return exportsTable[id - 1].objectName;
-            if (id < 0 && -id < importsTable.Count)
+            else if (id < 0 && -id < importsTable.Count)
                 return importsTable[-id - 1].objectName;
             return "Class";
         }
@@ -392,7 +393,7 @@ namespace MassEffectModder
         {
             if (id > 0 && id < exportsTable.Count)
                 return exportsTable[id - 1].objectNameId;
-            if (id < 0 && -id < importsTable.Count)
+            else if (id < 0 && -id < importsTable.Count)
                 return importsTable[-id - 1].objectNameId;
             return 0;
         }
@@ -532,6 +533,10 @@ namespace MassEffectModder
             else
                 loadExports(packageFile);
 
+            packageFile.SeekEnd();
+            packageFile.Seek(-Package.MEMendFileMarker.Length, SeekOrigin.Current);
+            string marker = packageFile.ReadStringASCII(Package.MEMendFileMarker.Length);
+            hasMEMMarker = marker == Package.MEMendFileMarker;
             //loadImportsNames(); // not used by tool
             //loadExportsNames(); // not used by tool
         }
@@ -613,7 +618,8 @@ namespace MassEffectModder
                             {
                                 uint dstLen = 0;
                                 ChunkBlock block = blocks[b];
-                                dstLen = new ZlibHelper.Zlib().Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
+                                if (compressionType == CompressionType.Zlib)
+                                    dstLen = new ZlibHelper.Zlib().Decompress(block.compressedBuffer, block.comprSize, block.uncompressedBuffer);
                                 if (dstLen != block.uncomprSize)
                                     throw new Exception("Decompressed data size not expected!");
                             });
@@ -998,9 +1004,18 @@ namespace MassEffectModder
             }
         }
 
-        public bool SaveToFile(bool forceZlib = false, bool forceCompressed = false, bool forceDecompressed = false, string filename = null)
+        public bool SaveToFile(bool forceZlib = false, bool forceCompressed = false,
+            bool forceDecompressed = false, string filename = null)
         {
-            if (forceZlib && compressionType != CompressionType.Zlib)
+            if (forceCompressed && packageFileVersion == packageFileVersionME1)
+                forceCompressed = false;
+
+            if (forceZlib && packageFileVersion == packageFileVersionME2 &&
+                    compressionType != CompressionType.Zlib)
+                modified = true;
+
+            // WA Allow force back to LZO2
+            if (forceZlib && packageFileVersion == packageFileVersionME1)
                 modified = true;
 
             // WA Allow force back to LZO2
@@ -1110,7 +1125,7 @@ namespace MassEffectModder
                 {
                     if (compressionType == CompressionType.None)
                     {
-                        if (packageFileVersion == packageFileVersionME3)
+                        if (packageFileVersion == packageFileVersionME3 || forceZlib)
                             compressionType = CompressionType.Zlib;
                         else
                             compressionType = CompressionType.LZO;
@@ -1118,7 +1133,11 @@ namespace MassEffectModder
                     compressed = true;
                 }
                 else
+                {
+                    if (!modified)
+                        return false;
                     forceCompressed = false;
+                }
             }
 
             if (namesOffset > sortedExports[0].dataOffset ||
@@ -1180,9 +1199,7 @@ namespace MassEffectModder
                         compressionType = CompressionType.Zlib; // override compression type to Zlib
                     // WA Force back to LZO2 compression
                     if (packageFileVersion == packageFileVersionME1 && compressionType == CompressionType.Zlib)
-                    {
                         compressionType = CompressionType.LZO;
-                    }
                     fs.Write(packageHeader, 0, packageHeader.Length);
                     fs.WriteUInt32((uint)compressionType);
                     fs.WriteUInt32((uint)chunks.Count);
@@ -1281,8 +1298,11 @@ namespace MassEffectModder
                     chunks = null;
                 }
 
-                fs.SeekEnd();
-                fs.WriteStringASCII(MEMendFileMarker);
+                if (hasMEMMarker)
+                {
+                    fs.SeekEnd();
+                    fs.WriteStringASCII(MEMendFileMarker);
+                }
             }
 
             tempOutput.Close();
