@@ -92,6 +92,12 @@ namespace SFARTools
                         sfar.extract(options.SFARPath, options.OutputPath, false, ref currentProgress, numFiles, true, options.KeepArchiveIntact);
                     }
                 }
+                else if (options.GamePath != null)
+                {
+                    Console.WriteLine("Extracting all DLC from game directory: " + options.GamePath);
+                    SFAR.unpackAllDLC(options.GamePath);
+                    EndProgram(0);
+                }
 
                 // Values are available here
                 // if (options.Verbose) Console.WriteLine("Filename: {0}", options.InputFile);

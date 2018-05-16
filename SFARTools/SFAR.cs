@@ -83,11 +83,6 @@ namespace SFARTools
             }
         }
 
-        public SFAR()
-        {
-
-        }
-
         private void loadHeader(MemoryStream stream)
         {
             uint tag = stream.ReadUInt32();
@@ -167,10 +162,24 @@ namespace SFARTools
         public void extract(string SFARfilename, string outPath, bool ipc, ref int currentProgress, int totalNumber, bool keepbiogamedlc = true, bool readOnly = false)
         {
             if (!File.Exists(SFARfilename))
-                throw new Exception("SFAR archive not found: "+SFARfilename);
-            string stagedfile = Directory.GetParent(SFARfilename) + "\\Default.sfar.STAGED";
+                throw new Exception("SFAR archive not found: " + SFARfilename);
 
-            byte[] buffer = File.ReadAllBytes(SFARfilename); //read file fully into memory
+            string stagedfile = Directory.GetParent(SFARfilename) + "\\Default.sfar.STAGED";
+            byte[] buffer = File.ReadAllBytes(SFARfilename);
+
+            File.Delete(SFARfilename);
+            using (FileStream outputFile = new FileStream(SFARfilename, FileMode.Create, FileAccess.Write))
+            {
+                outputFile.WriteUInt32(SfarTag);
+                outputFile.WriteUInt32(SfarVersion);
+                outputFile.WriteUInt32(HeaderSize);
+                outputFile.WriteUInt32(HeaderSize);
+                outputFile.WriteUInt32(0);
+                outputFile.WriteUInt32(HeaderSize);
+                outputFile.WriteUInt32((uint)MaxBlockSize);
+                outputFile.WriteUInt32(LZMATag);
+            }
+
             using (MemoryStream stream = new MemoryStream(buffer))
             {
                 loadHeader(stream);
@@ -200,18 +209,22 @@ namespace SFARTools
                     if (filesList[i].filenamePath == null)
                         throw new Exception("filename missing");
 
-                    int newProgress = (100 * currentProgress) / totalNumber;
-                    if (ipc && lastProgress != newProgress)
+                    if (ipc)
                     {
-                        Console.WriteLine("[IPC]TASK_PROGRESS " + newProgress);
-                        Console.WriteLine("[IPC]OVERALL_PROGRESS " + newProgress);
-                        Console.Out.Flush();
-                        lastProgress = newProgress;
+                        int newProgress = (100 * currentProgress) / totalNumber;
+                        if (lastProgress != newProgress)
+                        {
+                            Console.WriteLine("[IPC]TASK_PROGRESS " + newProgress);
+                            Console.Out.Flush();
+                            lastProgress = newProgress;
+                        }
                     }
 
                     int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
-                    string filename = filesList[i].filenamePath.Replace('/', '\\'); ;
+                    string filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
+
                     string dir = outPath;
+
                     if (!keepbiogamedlc)
                     {
                         int prefixpoint = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
@@ -385,38 +398,36 @@ namespace SFARTools
                 return;
 
             List<string> sfarFiles = Directory.GetFiles(DLCDir, "Default.sfar", SearchOption.AllDirectories).ToList();
+            int totalSfars = sfarFiles.Count;
             for (int i = 0; i < sfarFiles.Count; i++)
             {
                 if (File.Exists(Path.Combine(Path.GetDirectoryName(sfarFiles[i]), "Mount.dlc")))
                     sfarFiles.RemoveAt(i--);
             }
             if (sfarFiles.Count() == 0)
+            {
                 return;
-
-            string tmpDlcDir = Path.Combine(GamePath, "BIOGame", "DLCTemp");
-            if (Directory.Exists(tmpDlcDir))
-                Directory.Delete(tmpDlcDir, true);
-            Directory.CreateDirectory(tmpDlcDir);
-            string originInstallFiles = Path.Combine(DLCDir, "__metadata");
-            if (Directory.Exists(originInstallFiles))
-                Directory.Move(originInstallFiles, tmpDlcDir + "\\__metadata");
+            }
+            if (ipc)
+            {
+                Console.WriteLine("[IPC]STAGE_WEIGHT STAGE_UNPACKDLC " +
+                    string.Format("{0:0.000000}", ((float)sfarFiles.Count / totalSfars)));
+                Console.Out.Flush();
+            }
 
             int totalNumFiles = 0;
             int currentProgress = 0;
-            if (ipc)
+            for (int i = 0; i < sfarFiles.Count; i++)
             {
-                for (int i = 0; i < sfarFiles.Count; i++)
-                {
-                    string DLCname = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(sfarFiles[i])));
-                    totalNumFiles += getNumberOfFiles(sfarFiles[i]);
-                }
+                string DLCname = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(sfarFiles[i])));
+                totalNumFiles += getNumberOfFiles(sfarFiles[i]);
             }
+
 
             for (int i = 0; i < sfarFiles.Count; i++)
             {
                 string DLCname = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(sfarFiles[i])));
-                string outPath = Path.Combine(tmpDlcDir, DLCname);
-                Directory.CreateDirectory(outPath);
+                string outPath = Path.Combine(DLCDir, DLCname);
                 SFAR dlc = new SFAR();
                 if (ipc)
                 {
@@ -424,49 +435,6 @@ namespace SFARTools
                     Console.Out.Flush();
                 }
                 dlc.extract(sfarFiles[i], outPath, ipc, ref currentProgress, totalNumFiles);
-            }
-
-            sfarFiles = Directory.GetFiles(DLCDir, "Default.sfar", SearchOption.AllDirectories).ToList();
-            for (int i = 0; i < sfarFiles.Count; i++)
-            {
-                if (File.Exists(Path.Combine(Path.GetDirectoryName(sfarFiles[i]), "Mount.dlc")))
-                {
-                    string source = Path.GetDirectoryName(Path.GetDirectoryName(sfarFiles[i]));
-                    Directory.Move(source, tmpDlcDir + "\\" + Path.GetFileName(source));
-                }
-            }
-
-            try
-            {
-                Directory.Delete(DLCDir, true);
-            }
-            catch
-            {
-                if (ipc)
-                {
-                    Console.WriteLine("[IPC]ERROR Failed move DLCTemp!");
-                    Console.Out.Flush();
-                }
-                else
-                {
-                    Console.WriteLine("Failed move DLCTemp!");
-                }
-            }
-            try
-            {
-                Directory.Move(tmpDlcDir, DLCDir);
-            }
-            catch
-            {
-                if (ipc)
-                {
-                    Console.WriteLine("[IPC]ERROR Failed move DLCTemp!");
-                    Console.Out.Flush();
-                }
-                else
-                {
-                    Console.WriteLine("Failed move DLCTemp!");
-                }
             }
         }
     }

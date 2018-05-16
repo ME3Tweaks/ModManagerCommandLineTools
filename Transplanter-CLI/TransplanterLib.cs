@@ -476,12 +476,12 @@ namespace TransplanterLib
                         }
                     }
                 }
-                writeVerboseLine("Replaced " + numReplaced + " files, saving.");
+                writeVerboseLine("Replaced " + numReplaced + " exports, saving.");
                 if (replaced)
                 {
                     //pcc.saveByReconstructing(destinationFile); //34 is default
                     Console.WriteLine("Saving pcc: " + destinationFile + (forceCompressed ? ", attempting to compress" : ""));
-                    pcc.SaveToFile(false, forceCompressed == true, forceCompressed == false, destinationFile);
+                    pcc.SaveToFile(filename: destinationFile);
                     pcc.Dispose();
                     // pcc.save(destinationFile);
                     return VerifyPCC(destinationFile);
