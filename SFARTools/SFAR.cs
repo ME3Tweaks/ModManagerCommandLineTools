@@ -83,7 +83,7 @@ namespace SFARTools
             }
         }
 
-        private void loadHeader(MemoryStream stream)
+        private void loadHeader(Stream stream)
         {
             uint tag = stream.ReadUInt32();
             if (tag != SfarTag)
@@ -303,6 +303,7 @@ namespace SFARTools
         {
             using (FileStream sfarFile = new FileStream(sfarfilelocation, FileMode.Open, FileAccess.Read))
             {
+                loadHeader(sfarFile);
                 if (outPath == null)
                 {
                     //do same folder

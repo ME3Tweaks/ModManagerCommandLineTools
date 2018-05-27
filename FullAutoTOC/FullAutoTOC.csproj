@@ -104,7 +104,8 @@
   </Target>
   <Import Project="..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets" Condition="Exists('..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll"
+    <PostBuildEvent>if $(ConfigurationName) == Release signtool sign /n "Michael Perez" /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "$(TargetPath)"
+if $(Platform)==x64 copy /y "$(SolutionDir)dlls\sevenzipwrapper-x64.dll"  "$(SolutionDir)Output\$(Platform)\sevenzipwrapper.dll"
 copy /y "$(TargetPath)" "$(SolutionDir)Output\$(Platform)\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
