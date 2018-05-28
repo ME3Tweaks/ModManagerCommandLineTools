@@ -166,20 +166,7 @@ namespace SFARTools
 
             string stagedfile = Directory.GetParent(SFARfilename) + "\\Default.sfar.STAGED";
             byte[] buffer = File.ReadAllBytes(SFARfilename);
-
-            File.Delete(SFARfilename);
-            using (FileStream outputFile = new FileStream(SFARfilename, FileMode.Create, FileAccess.Write))
-            {
-                outputFile.WriteUInt32(SfarTag);
-                outputFile.WriteUInt32(SfarVersion);
-                outputFile.WriteUInt32(HeaderSize);
-                outputFile.WriteUInt32(HeaderSize);
-                outputFile.WriteUInt32(0);
-                outputFile.WriteUInt32(HeaderSize);
-                outputFile.WriteUInt32((uint)MaxBlockSize);
-                outputFile.WriteUInt32(LZMATag);
-            }
-
+            
             using (MemoryStream stream = new MemoryStream(buffer))
             {
                 loadHeader(stream);
@@ -187,14 +174,14 @@ namespace SFARTools
                 if (!readOnly)
                 {
                     //Directory.CreateDirectory(Path.Combine(outPath, "CookedPCConsole"));
-                    Console.WriteLine("Creating staged file: " + stagedfile);
-                    using (FileStream outputFile = new FileStream(stagedfile, FileMode.Create, FileAccess.Write))
+                    File.Delete(SFARfilename);
+                    using (FileStream outputFile = new FileStream(SFARfilename, FileMode.Create, FileAccess.Write))
                     {
                         outputFile.WriteUInt32(SfarTag);
                         outputFile.WriteUInt32(SfarVersion);
                         outputFile.WriteUInt32(HeaderSize);
                         outputFile.WriteUInt32(HeaderSize);
-                        outputFile.WriteUInt32((uint)filesList.Count);
+                        outputFile.WriteUInt32(0);
                         outputFile.WriteUInt32(HeaderSize);
                         outputFile.WriteUInt32((uint)MaxBlockSize);
                         outputFile.WriteUInt32(LZMATag);
@@ -220,15 +207,12 @@ namespace SFARTools
                         }
                     }
 
-                    int pos = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
-                    string filename = filesList[i].filenamePath.Substring(pos + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
-
+                    string filename = filesList[i].filenamePath;
                     string dir = outPath;
-
                     if (!keepbiogamedlc)
                     {
-                        int prefixpoint = filesList[i].filenamePath.IndexOf("\\BIOGame\\DLC\\", StringComparison.OrdinalIgnoreCase);
-                        filename = filesList[i].filenamePath.Substring(prefixpoint + ("\\BIOGame\\DLC\\").Length).Replace('/', '\\');
+                        int prefixpoint = filesList[i].filenamePath.IndexOf("/BIOGame/DLC/", StringComparison.OrdinalIgnoreCase);
+                        filename = filesList[i].filenamePath.Substring(prefixpoint + ("/BIOGame/DLC/").Length).Replace('/', '\\');
                         dir = Path.GetDirectoryName(outPath);
                     }
                     Directory.CreateDirectory(Path.GetDirectoryName(dir + filename));
@@ -284,12 +268,6 @@ namespace SFARTools
                     }
                 }
             }
-            if (!readOnly)
-            {
-                File.Delete(SFARfilename);
-                File.Move(stagedfile, SFARfilename);
-            }
-
         }
 
         /// <summary>
