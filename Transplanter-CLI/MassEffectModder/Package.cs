@@ -1092,7 +1092,7 @@ namespace MassEffectModder
             }
         }
 
-        public bool SaveToFile(bool forceCompressed = false, bool forceDecompressed = false, bool appendMarker = true, string filename = null)
+        public bool SaveToFile(bool forceCompressed = false, bool forceDecompressed = false, bool appendMarker = false, string filename = null)
         {
             if (packageFileVersion == packageFileVersionME1)
                 forceCompressed = false;
