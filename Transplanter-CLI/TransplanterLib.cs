@@ -957,7 +957,6 @@ namespace TransplanterLib
                             String className = exp.ClassName;
                             Boolean isCoalesced = exp.likelyCoalescedVal;
                             Boolean isScript = scripts && (className == "Function");
-                            Boolean isEnum = className == "Enum";
                             Boolean isPathfindingNode = className == "BioPathPoint" || className == "ReachSpec" || className == "SlotToSlotReachSpec" || className == "SFXNav_BoostNode" || className == "CoverLink" || className == "SFXDoorMarker" || className == "SFXEnemySpawnPoint" || className == "PathNode";
                             int progress = ((int)(((double)numDone / numTotal) * 100));
                             while (progress >= (lastProgress + 10))
@@ -992,12 +991,6 @@ namespace TransplanterLib
 
                                     }
                                     stringoutput.WriteLine("(Superclass: " + exp.ClassParentWrapped + ") (Data Offset: 0x " + exp.DataOffset.ToString("X4") + ")");
-                                }
-
-                                if (isEnum)
-                                {
-                                    SFXEnum sfxenum = new SFXEnum(pcc, exp.Data);
-                                    stringoutput.WriteLine(sfxenum.ToString());
                                 }
 
                                 if (isScript)

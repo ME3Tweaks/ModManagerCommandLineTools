@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Diagnostics;
 using TransplanterLib;
+using Gibbed.IO;
+using static TransplanterLib.PCCObject;
 
 namespace TransplanterLib
 {
@@ -98,11 +100,19 @@ namespace TransplanterLib
             defaultStructValues = new Dictionary<string, List<PropertyReader.Property>>();
         }
 
+        private string[] binaryClassesToParse = { "Const", "Enum" };
         public void InitInterpreter()
         {
             memory = pcc.Exports[Index].Data;
             className = pcc.Exports[Index].ClassName;
-            StartScan();
+            if (!className.StartsWith("Default__") && binaryClassesToParse.Contains(className))
+            {
+                ScanBinaryExport(pcc.Exports[Index]);
+            }
+            else
+            {
+                StartScan();
+            }
         }
 
         private void StartScan(IEnumerable<string> expandedNodes = null, string topNodeName = null, string selectedNodeName = null)
@@ -235,7 +245,7 @@ namespace TransplanterLib
                                         {
                                             if (pcc.Exports.Count > value)
                                             {
-                                                s += pcc.Exports[value].PackageFullName+"."+pcc.Exports[value].ObjectName + " [EXPORT " + value + "]";
+                                                s += pcc.Exports[value].PackageFullName + "." + pcc.Exports[value].ObjectName + " [EXPORT " + value + "]";
                                             }
                                             else
                                             {
@@ -329,6 +339,116 @@ namespace TransplanterLib
                     }
 
                 }
+            }
+        }
+
+        private void ScanBinaryExport(ExportEntry export)
+        {
+            switch (export.ClassName)
+            {
+                case "Enum":
+                case "Const":
+                    ScanEnumConst(export);
+                    break;
+            }
+        }
+
+        private void ScanEnumConst(ExportEntry export)
+        {
+            Debug.WriteLine("Const,Enum");
+            topNode = new TreeNode($"0000 : {export.ObjectName}({export.ClassName})")
+            {
+                Tag = nodeType.Root,
+                Name = "0"
+            };
+            try
+            {
+                byte[] data = memory;
+                int offset = 0;
+                int unrealExportIndex = BitConverter.ToInt32(data, offset);
+                topNode.Nodes.Add(new TreeNode($"0x{offset:X5} Unreal Unique Index: {unrealExportIndex}")
+                {
+                    Name = offset.ToString(),
+                    Tag = nodeType.StructLeafInt
+                });
+                offset += 4;
+
+                int noneUnrealProperty = BitConverter.ToInt32(data, offset);
+                int noneUnrealPropertyIndex = BitConverter.ToInt32(data, offset + 4);
+                topNode.Nodes.Add(new TreeNode($"0x{offset:X5} Unreal property None Name: {pcc.getNameEntry(noneUnrealProperty)}")
+                {
+                    Name = offset.ToString(),
+                    Tag = nodeType.StructLeafName
+                });
+                offset += 16;
+
+                //int superclassIndex = BitConverter.ToInt32(data, offset);
+                //string superclassStr = getEntryFullPath(superclassIndex);
+                //topNode.Nodes.Add(new TreeNode($"0x{offset:X5} Superclass: {superclassIndex}({superclassStr})")
+                //{
+                //    Name = offset.ToString(),
+                //    Tag = nodeType.StructLeafObject
+                //});
+                //offset += 4;
+
+                //int classObjTree = BitConverter.ToInt32(data, offset);
+                //topNode.Nodes.Add(new TreeNode($"0x{offset:X5} NextItemCompilingChain: {classObjTree} {getEntryFullPath(classObjTree)}")
+                //{
+                //    Name = offset.ToString(),
+                //    Tag = nodeType.StructLeafObject
+                //});
+                //offset += 4;
+
+                if (export.ClassName == "Enum")
+                {
+
+                    int enumSize = BitConverter.ToInt32(data, offset);
+                    topNode.Nodes.Add(new TreeNode($"0x{offset:X5} Enum Size: {enumSize}")
+                    {
+                        Name = offset.ToString(),
+                        Tag = nodeType.StructLeafInt
+                    });
+                    offset += 4;
+
+                    for (int i = 0; i < enumSize; i++)
+                    {
+                        int enumName = BitConverter.ToInt32(data, offset);
+                        int enumNameIndex = BitConverter.ToInt32(data, offset + 4);
+                        topNode.Nodes.Add(new TreeNode($"0x{offset:X5} EnumName[{i}]: {pcc.getNameEntry(enumName)}")
+                        {
+                            Name = offset.ToString(),
+                            Tag = nodeType.StructLeafName
+                        });
+                        offset += 8;
+                    }
+                }
+
+                if (export.ClassName == "Const")
+                {
+                    int literalStringLength = BitConverter.ToInt32(data, offset);
+                    topNode.Nodes.Add(new TreeNode($"0x{offset:X5} Const Literal Length: {literalStringLength}")
+                    {
+                        Name = offset.ToString(),
+                        Tag = nodeType.IntProperty
+                    });
+                    offset += 4;
+
+                    //value is stored as a literal string in binary.
+                    MemoryStream stream = new MemoryStream(data) { Position = offset };
+                    if (literalStringLength < 0)
+                    {
+                        string str = stream.ReadString((literalStringLength * -2), true, System.Text.Encoding.Unicode);
+                        topNode.Nodes.Add(new TreeNode($"0x{offset:X5} Const Literal Value: {str}")
+                        {
+                            Name = offset.ToString(),
+                            Tag = nodeType.StrProperty
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                topNode.Nodes.Add(new TreeNode($"An error occured parsing the {export.ClassName} binary: {ex.Message}"));
             }
         }
 
