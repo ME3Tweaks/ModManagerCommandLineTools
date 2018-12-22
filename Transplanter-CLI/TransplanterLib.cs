@@ -292,46 +292,47 @@ namespace TransplanterLib
         /// <returns></returns>
         public static Boolean doesPCCContainGUIs(string pccfilepath, Boolean anygui)
         {
-            string[] whitelist = {
-                "gui_designui_bar.DesignUI_HorzBar",
-                "GUI_DesignUI_Timer.DesignUI_Timer",
-                "GUI_SF_AreaMap.ME2_AreaMap",
-                "GUI_SF_BlackScreen.BlackScreen",
-                "GUI_SF_ConversationWheel.ConversationWheel",
-                "GUI_SF_DLC_Docks.DLC_Docks",
-                "GUI_SF_Elevators.NormandyElevator",
-                "GUI_SF_GalaxyAtWar.galaxyAtWar",
-                "GUI_SF_GalaxyMap.GalaxyMap",
-                "GUI_SF_GameOver.GameOver",
-                "GUI_SF_Jourdex.Jourdex",
-                "GUI_SF_LoadSave.LoadSave",
-                "GUI_SF_LoadScreenToolTips.LoadScreenToolTips",
-                "GUI_SF_Mail.Mail",
-                "GUI_SF_HUDatlas.HUDatlas",
-                "GUI_SF_MainWheel.MainWheel",
-                "GUI_SF_Markers.Markers",
-                "GUI_SF_Markers.ObjectiveMarkers",
-                "GUI_SF_ME2_AreaMap.ME2_AreaMap",
-                "GUI_SF_ME2_HUD.ME2_HUD",
-                "GUI_SF_ME2_PowerWheel.ME2_PowerWheel",
-                "GUI_SF_ME2_Reticle.ME2_Reticle",
-                "GUI_SF_MessageBox.messageBox",
-                "GUI_SF_MessageBox_Hint.MessageBox_Hint",
-                "GUI_SF_MPPlayerCountdown.MPPlayerCountdown",
-                "GUI_SF_Options.Options",
-                "GUI_SF_PC_SharedAssets.PC_SharedAssets",
-                "GUI_SF_Personalization.Personalization",
-                "GUI_SF_PersonalTerminal.PersonalTerminal",
-                "GUI_SF_PersonalTerminalApt.PersonalTerminalApt",
-                "GUI_SF_PRCStore.PRCStore",
-                "GUI_SF_SaveLoadIndicator.SaveLoadIndicator",
-                "GUI_SF_SquadRecord.SquadRecord",
-                "GUI_SF_Store_NoPurchase.Store_NoPurchase",
-                "GUI_SF_Subtitles.Subtitles",
-                "GUI_SF_Training.Training",
-                "GUI_SF_WarAssets.WarAssets",
-                "GUI_SF_WarAssetsEGM.WarAssets",
-                "GUI_SF_Xbox_ControllerIcons.Xbox_ControllerIcons"
+string[] whitelist = {
+"GUI_SF_Accomplishments.Accomplishments",
+"gui_designui_bar.DesignUI_HorzBar",
+"GUI_DesignUI_Timer.DesignUI_Timer",
+"GUI_SF_AreaMap.ME2_AreaMap",
+"GUI_SF_BlackScreen.BlackScreen",
+"GUI_SF_ConversationWheel.ConversationWheel",
+"GUI_SF_DLC_Docks.DLC_Docks",
+"GUI_SF_Elevators.NormandyElevator",
+"GUI_SF_GalaxyAtWar.galaxyAtWar",
+"GUI_SF_GalaxyMap.GalaxyMap",
+"GUI_SF_GameOver.GameOver",
+"GUI_SF_Jourdex.Jourdex",
+"GUI_SF_LoadSave.LoadSave",
+"GUI_SF_LoadScreenToolTips.LoadScreenToolTips",
+"GUI_SF_Mail.Mail",
+"GUI_SF_HUDatlas.HUDatlas",
+"GUI_SF_MainWheel.MainWheel",
+"GUI_SF_Markers.Markers",
+"GUI_SF_Markers.ObjectiveMarkers",
+"GUI_SF_ME2_AreaMap.ME2_AreaMap",
+"GUI_SF_ME2_HUD.ME2_HUD",
+"GUI_SF_ME2_PowerWheel.ME2_PowerWheel",
+"GUI_SF_ME2_Reticle.ME2_Reticle",
+"GUI_SF_MessageBox.messageBox",
+"GUI_SF_MessageBox_Hint.MessageBox_Hint",
+"GUI_SF_MPPlayerCountdown.MPPlayerCountdown",
+"GUI_SF_Options.Options",
+"GUI_SF_PC_SharedAssets.PC_SharedAssets",
+"GUI_SF_Personalization.Personalization",
+"GUI_SF_PersonalTerminal.PersonalTerminal",
+"GUI_SF_PersonalTerminalApt.PersonalTerminalApt",
+"GUI_SF_PRCStore.PRCStore",
+"GUI_SF_SaveLoadIndicator.SaveLoadIndicator",
+"GUI_SF_SquadRecord.SquadRecord",
+"GUI_SF_Store_NoPurchase.Store_NoPurchase",
+"GUI_SF_Subtitles.Subtitles",
+"GUI_SF_Training.Training",
+"GUI_SF_WarAssets.WarAssets",
+"GUI_SF_WarAssetsEGM.WarAssets",
+"GUI_SF_Xbox_ControllerIcons.Xbox_ControllerIcons"
             };
             PCCObject pcc = new PCCObject(pccfilepath);
             foreach (PCCObject.ExportEntry export in pcc.Exports)
@@ -476,12 +477,12 @@ namespace TransplanterLib
                         }
                     }
                 }
-                writeVerboseLine("Replaced " + numReplaced + " files, saving.");
+                writeVerboseLine("Replaced " + numReplaced + " exports, saving.");
                 if (replaced)
                 {
                     //pcc.saveByReconstructing(destinationFile); //34 is default
                     Console.WriteLine("Saving pcc: " + destinationFile + (forceCompressed ? ", attempting to compress" : ""));
-                    pcc.SaveToFile(false, forceCompressed == true, forceCompressed == false, destinationFile);
+                    pcc.SaveToFile(filename: destinationFile);
                     pcc.Dispose();
                     // pcc.save(destinationFile);
                     return VerifyPCC(destinationFile);
@@ -957,7 +958,6 @@ namespace TransplanterLib
                             String className = exp.ClassName;
                             Boolean isCoalesced = exp.likelyCoalescedVal;
                             Boolean isScript = scripts && (className == "Function");
-                            Boolean isEnum = className == "Enum";
                             Boolean isPathfindingNode = className == "BioPathPoint" || className == "ReachSpec" || className == "SlotToSlotReachSpec" || className == "SFXNav_BoostNode" || className == "CoverLink" || className == "SFXDoorMarker" || className == "SFXEnemySpawnPoint" || className == "PathNode";
                             int progress = ((int)(((double)numDone / numTotal) * 100));
                             while (progress >= (lastProgress + 10))
@@ -992,12 +992,6 @@ namespace TransplanterLib
 
                                     }
                                     stringoutput.WriteLine("(Superclass: " + exp.ClassParentWrapped + ") (Data Offset: 0x " + exp.DataOffset.ToString("X4") + ")");
-                                }
-
-                                if (isEnum)
-                                {
-                                    SFXEnum sfxenum = new SFXEnum(pcc, exp.Data);
-                                    stringoutput.WriteLine(sfxenum.ToString());
                                 }
 
                                 if (isScript)

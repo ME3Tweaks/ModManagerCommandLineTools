@@ -51,9 +51,13 @@ namespace FullAutoTOC
             {
                 //Console.WriteLine("FullAutoTOC by FemShep (based on AutoTOC.exe & ME3Explorer code)");
                 //Console.WriteLine("Usage: FullAutoTOC.exe <ME3 Directory>");
-                RunFullGameTOC(args[0]);
-                EndProgram(0);
+                if (Directory.Exists(args[0]))
+                {
+                    RunFullGameTOC(args[0]);
+                    EndProgram(0);
+                }
             }
+
             Options options = new Options();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
@@ -169,6 +173,8 @@ namespace FullAutoTOC
                     //RunFullGameTOC(args[0]);
                     EndProgram(0);
                 }
+                Console.WriteLine("No options were specified! Please see documentation (run FullAutoTOC.exe with no arguments) for info on how to use this product.");
+                EndProgram(1);
             }
         }
 
@@ -442,7 +448,7 @@ namespace FullAutoTOC
 
 #if DEBUG
             Console.WriteLine("Press any key to continue");
-            //Console.ReadKey();
+            Console.ReadKey();
 #endif
 
             Environment.Exit(code);
