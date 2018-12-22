@@ -344,7 +344,7 @@ namespace TransplanterLib
                         return true;
                     }
                     string fullname = export.PackageName + "." + export.ObjectName;
-                    if (Array.Exists(whitelist, element => element.Equals(fullname,StringComparison.OrdinalIgnoreCase)))
+                    if (Array.Exists(whitelist, element => element.Equals(fullname, StringComparison.OrdinalIgnoreCase)))
                     {
                         Console.WriteLine("PCC contains a whitelisted GUI export.");
                         return true;
@@ -391,6 +391,8 @@ namespace TransplanterLib
                     if (exp.ClassName == "GFxMovieInfo")
                     {
                         string packobjname = exp.PackageFullName;
+                        writeVerboseLine("#" + i + " Found GfxMovieInfo export " + exp.PackageFullName);
+
                         int index = packobjnames.IndexOf(packobjname.ToLower());
                         if (index > -1)
                         {
@@ -456,19 +458,17 @@ namespace TransplanterLib
                 for (int i = 0; i < numExports; i++)
                 {
                     //pcc.
-                    if (i == 405)
-                    {
-                        Debug.WriteLine("t");
-                    }
                     Package.ExportEntry exp = pcc.exportsTable[i];
                     if (pcc.getClassName(exp.classId) == "GFxMovieInfo")
                     {
-                        
-                        string packobjname = pcc.resolvePackagePath((int)exp.id +1 );
+                        string packobjname = pcc.resolvePackagePath((int)exp.id + 1);
+                        writeVerboseLine("#" + exp.id + " Found GfxMovieInfo export " + packobjname);
+
                         int index = packobjnames.IndexOf(packobjname.ToLower());
                         if (index > -1)
                         {
-                            string logstr = "#" + i + " Replacing " + packobjname;
+                            string logstr = "#" + i + " >> Replacing " + packobjname;
+                            writeVerboseLine(logstr);
                             pcc.setExportData((int)exp.id, getReplacedSWFExportData(pcc.getExportData((int)exp.id), gfxfiles[index]));
                             //replace_swf_file(exp, gfxfiles[index]);
                             numReplaced++;
@@ -1108,7 +1108,7 @@ namespace TransplanterLib
                     //Updates lines.
                     foreach (KeyValuePair<int, int> entry in streamingLines)
                     {
-                        lines[entry.Key] += " - "+lskPackageName[entry.Value];
+                        lines[entry.Key] += " - " + lskPackageName[entry.Value];
                         Console.WriteLine(lines[entry.Key]);
 
                         // do something with entry.Value or entry.Key
